@@ -87,21 +87,14 @@ module.exports = class Initiatives {
           })
         }
 
-        if (req.query.include === 'interests') {
-          const initiativeWithInterests = await Initiative.findAll({
-            include: [{ model: Interests }]
-          })
-
-          return res.status(200).json({
-            data: initiativeWithInterests.map(initiative => {
-              return shortJson.format(initiative)
-            })
-          })
-        }
+        const initiativeWithInterests = await Initiative.findAll({
+          include: [{ model: Interests }]
+        })
 
         return res.status(200).json({
-          data: await Initiative.findAll().map(initiative => {
-            return shortJson.format(initiative)})
+          data: initiativeWithInterests.map(initiative => {
+            return shortJson.format(initiative)
+          })
         })
       }
       catch (err) {
