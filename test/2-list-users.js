@@ -1,31 +1,49 @@
-const chai = require('chai');
-const chaiHttp = require('chai-http');
+process.env.NODE_ENV = 'test';
+let chai = require('chai');
+let chaiHttp = require('chai-http');
+let server = require('../index');
+let should = chai.should();
+
 chai.use(chaiHttp);
-const server = require('../index');
-const should = chai.should();
-const expect = chai.expect;
 
-describe('List Users', () => {
+let token = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imp1bGlhbmFAZ21pYWwuY29tIiwiaWF0IjoxNTQ4OTYzNjUzLCJleHAiOjE1NDk1Njg0NTN9.C90tZd2cd9NpAjYnIEUWF2CbacfQu1_uQPo7sYMnCoY'
 
-  let token = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRhbGlAZ21pYWwuY29tIiwiaWF0IjoxNTQ3NjU5ODkyLCJleHAiOjE1NDgyNjQ2OTJ9.4z3XN0h9lLc4UOWp1V8B12Zytw6k9OVV8szF8i2ATA8'
+describe('GET /users', () => {
 
-  it('should list ALL users on /users GET', (done) => {
+  it('it should GET all users', (done) => {
     chai.request(server.app)
       .get('/users')
       .set('Authorization', token)
       .end((err, res) => {
-        expect(res).to.have.status(200);
+        res.should.have.status(200);
+        res.body.should.be.an('object');
+        res.body.should.have.property('data');
+        res.body.data.should.be.a('array');
+        res.body.data[0].should.have.property('id');
+        res.body.data[0].should.have.property('type').eql('User');
+        res.body.data[0].should.have.property('attributes');
         done();
       });
   });
 
-  it('should list ALL users and their interests on /users GET', (done) => {
+});
+
+describe('GET /user/ID', () => {
+
+  it('it should GET an user', (done) => {
     chai.request(server.app)
-      .get('/users?include=users-interests')
+      .get('/users/150')
       .set('Authorization', token)
       .end((err, res) => {
-        expect(res.body).to.have.property('data');
-        expect(res).to.have.status(200);
+        res.should.have.status(200);
+        res.body.should.be.an('object');
+        res.body.should.have.property('data');
+        res.body.data.should.be.an('object');
+        res.body.data.should.have.property('id');
+        res.body.data.should.have.property('type').eql('User');
+        res.body.data.should.have.property('attributes');
+        res.body.data.attributes.should.have.property('interests');
+        res.body.data.attributes.interests.should.be.a('array');
         done();
       });
   });

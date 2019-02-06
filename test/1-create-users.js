@@ -1,7 +1,4 @@
 process.env.NODE_ENV = 'test';
-
-let { User } = require('../domain/entities');
-
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 let server = require('../index');
@@ -9,22 +6,20 @@ let should = chai.should();
 
 chai.use(chaiHttp);
 
-describe('Users', () => {
-/*  beforeEach((done) => {
-      User.destroy({ where: {}, truncate: true }, (err) => {
-        done();
-      })
-  });
-*/
+let user = {
+  "email": "teste14@gmail.com",
+  "username": "teste",
+  "userProfile": "Volunteer",
+  "latlong": {
+    "type": "Point",
+    "coordinates": [39.807222, -76.984722]
+  },
+  "interests": [40, 41, 42]
+}
 
+describe('Users', () => {
   describe('/POST user', () => {
     it('it should POST an user', (done) => {
-      let user = {
-        "email": "teste@gmail.com",
-        "username": "teste",
-        "userProfile": "Volunteer",
-        "interests": [40, 41, 42]
-      }
       chai.request(server.app)
         .post('/users')
         .send(user)

@@ -49,7 +49,7 @@ module.exports = class Users {
         const token = await login(req.body.email)
 
         res.status(200).json({
-          data: Json.format(user),
+          data: UsersLong.format(user),
           relationships: { interests },
           token: token
         })
