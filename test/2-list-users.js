@@ -42,8 +42,8 @@ describe('GET /user/ID', () => {
         res.body.data.should.have.property('id');
         res.body.data.should.have.property('type').eql('User');
         res.body.data.should.have.property('attributes');
-        res.body.data.attributes.should.have.property('interests');
-        res.body.data.attributes.interests.should.be.a('array');
+        res.body.data.relationships.should.have.property('interests');
+        res.body.data.relationships.interests.should.be.a('array');
         done();
       });
   });

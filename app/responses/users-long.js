@@ -19,11 +19,27 @@ const UsersLong = {
         userStatus: user.userStatus,
         userProfile: user.userProfile,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        updatedAt: user.updatedAt
+      },
+      relationships: {
         interests: user.Interests && user.Interests.map(interest => ({
           id: interest.id,
           description: interest.description,
           type: interest.type,
+        })),
+        matches: user.Initiatives && user.Initiatives.map(initiative => ({
+          id: initiative.id,
+          name: initiative.name,
+          website: initiative.website,
+          bio: initiative.bio,
+          avatar: initiative.avatar
+        })),
+        usersInitiatives: user.UserInitiatives && user.UserInitiatives.map(initiative => ({
+          id: initiative.id,
+          name: initiative.name,
+          website: initiative.website,
+          bio: initiative.bio,
+          avatar: initiative.avatar
         }))
       }
     }
