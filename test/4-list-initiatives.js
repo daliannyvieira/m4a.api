@@ -15,7 +15,6 @@ describe('GET /initiatives', () => {
       .get('/initiatives')
       .set('Authorization', token)
       .end((err, res) => {
-        console.log(res.body)
         res.should.have.status(200);
         res.body.should.be.an('object');
         res.body.should.have.property('data');

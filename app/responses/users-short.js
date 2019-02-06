@@ -11,7 +11,12 @@ const UsersShort = {
         country: user.country,
         city: user.city,
         allowToRemote: user.allowToRemote,
-        userProfile: user.userProfile
+        userProfile: user.userProfile,
+        interests: user.Interests && user.Interests.map(interest => ({
+          id: interest.id,
+          description: interest.description,
+          type: interest.type
+        }))
       }
     }
   }
