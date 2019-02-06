@@ -4,7 +4,6 @@ const { sendAvatar, handleImage } = require('../../domain/firebaseStorage');
 const { login } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
-const UsersRelationship = require('../responses/users-relationships');
 
 module.exports = class Users {
   constructor(router) {
@@ -78,7 +77,7 @@ module.exports = class Users {
           })
           if (user) {
             return res.status(200).json({
-              data: UsersRelationship.format(user)
+              data: UsersLong.format(user)
             });
           }
         }
