@@ -12,13 +12,13 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'Initiatives', key: 'id' },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onDelete: 'CASCADE'
       },
       UserId: {
         type: Sequelize.INTEGER,
         references: { model: 'Users', key: 'id' },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onDelete: 'CASCADE'
       },
       createdAt: {
         type: Sequelize.DATE,

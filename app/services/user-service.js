@@ -44,12 +44,20 @@ module.exports = class Users {
     this.router.post('/users', async (req, res) => {
       try {
         const user = await User.create(req.body)
-        const interests = await user.setInterests(req.body.interests);
         const token = await login(req.body.email)
 
+        if (req.body.interests) {
+          const interests = await user.setInterests(req.body.interests);
+          res.status(200).json({
+            data: UsersShort.format(user),
+            relationships: {
+              interests
+            },
+            token: token
+          })
+        }
         res.status(200).json({
           data: UsersLong.format(user),
-          relationships: { interests },
           token: token
         })
       }

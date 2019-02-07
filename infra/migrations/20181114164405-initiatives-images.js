@@ -22,7 +22,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'Initiatives', key: 'id' },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onDelete: 'CASCADE'
       },
     });
   },
