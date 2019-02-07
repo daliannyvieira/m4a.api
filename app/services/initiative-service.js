@@ -33,9 +33,9 @@ module.exports = class Initiatives {
             }
           })
         }
-        
+
         res.status(200).json({
-          data: longJson.format(initiative)
+          data: shortJson.format(initiative)
         })
       }
 

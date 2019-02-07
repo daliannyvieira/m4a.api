@@ -14,9 +14,7 @@ const shortJson = {
         interests: initiative.Interests && initiative.Interests.map(interest => ({
           id: interest.id,
           description: interest.description,
-          type: interest.type,
-          bio: interest.bio,
-          avatar: interest.avatar
+          type: interest.type
         }))
       }
     }
