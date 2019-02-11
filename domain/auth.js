@@ -1,5 +1,5 @@
 var jwt = require('jsonwebtoken');
-const { User, Interests } = require('./entities');
+const { User, Interests, Initiative } = require('./entities');
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
 
@@ -27,7 +27,7 @@ const loggedUser = async (req) => {
 
     return await User.findOne({
       where: { email: info.email },
-      include: [Interests]
+      include: [Interests, {'model': Initiative, as: 'UserInitiatives'}, Initiative]
     })
 
   }

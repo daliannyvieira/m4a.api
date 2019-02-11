@@ -1,39 +1,41 @@
 "use strict"
+const Op = require('sequelize').Op;
 
 const { Initiative, Interests, User } = require('../../domain/entities');
 
-const createQuery = ({ country, state, city, UserId }) => {
+const createQuery = ({ country, state, city, UserId, IdMatches }) => {
+
   if (city) {
     return Initiative.findAll({
-      where: { city: city, UserId: {$ne: UserId} },
+      where: { city: city, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
       include: [Interests]
     })
-   }
+  }
 
   if (state) {
     return Initiative.findAll({
-      where: { state: state, UserId: {$ne: UserId}  },
+      where: { state: state, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
       include: [Interests]
     })
-   }
+  }
 
   if (country) {
     return Initiative.findAll({
-      where: { country: country, UserId: {$ne: UserId}  },
+      where: { country: country, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
       include: [Interests]
     })
-
   }
 
   if (!city && !state && !country) {
     return Initiative.findAll({
+      where: { UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
       include: [Interests]
     })
   }
 }
 
-const searchNearestInitiatives = async ({ country, state, city, UserId }) => {
-  const query = createQuery({ country, state, city, UserId})
+const searchNearestInitiatives = async ({ country, state, city, UserId, IdMatches }) => {
+  const query = createQuery({ country, state, city, UserId, IdMatches})
 
   let result = await query
 
@@ -61,12 +63,12 @@ const searchNearestInitiatives = async ({ country, state, city, UserId }) => {
 
 module.exports = class InitiativeRepository {
   async findNearest(currentUser) {
-    console.log('currentUser', currentUser.id)
     const result = await searchNearestInitiatives({
       country: currentUser.country,
       state: currentUser.state,
       city: currentUser.city,
-      UserId: currentUser.id
+      UserId: currentUser.id,
+      IdMatches: currentUser.Initiatives.map(item => item.id)
     })
     return result
   }
