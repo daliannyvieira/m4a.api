@@ -1,6 +1,17 @@
 module.exports = (sequelize, DataTypes) => {
   const Interests = sequelize.define('Interests', {
-    description: DataTypes.STRING,
+    description: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: {
+        msg: "description must be unique"
+      },
+      validate: {
+        notEmpty: {
+          msg: "description can't be empty"
+        }
+      }
+    },
     type: {
       type: DataTypes.STRING,
       allowNull: false,
