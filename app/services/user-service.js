@@ -56,10 +56,12 @@ module.exports = class Users {
             token: token
           })
         }
-        res.status(200).json({
-          data: UsersLong.format(user),
-          token: token
-        })
+        else {
+          res.status(200).json({
+            data: UsersLong.format(user),
+            token: token
+          })
+        }
       }
       catch (err) {
         const error = { message: err.message }

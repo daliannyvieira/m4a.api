@@ -27,16 +27,15 @@ module.exports = class Initiatives {
   }
 
   findInterestByType() {
-    this.router.get('/interest/:type', async (req, res) => {
+    this.router.get('/interests/:type', async (req, res) => {
       try {
         res.status(200).json({
-          data: await Interests.findOne({
+          data: await Interests.findAll({
             where: { type: req.params.type }
           })
         })
       }
       catch (err) {
-        console.log(err)
         res.status(500).json(err)
       }
     });

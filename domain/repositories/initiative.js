@@ -1,36 +1,41 @@
 "use strict"
 
-const { Initiative } = require('../../domain/entities');
+const { Initiative, Interests, User } = require('../../domain/entities');
 
 const createQuery = ({ country, state, city, UserId }) => {
   if (city) {
-    return `select * from Initiatives
-            where country = '${country}'
-            and state = '${state}'
-            and city = '${city}'
-            and UserId <> '${UserId}'`
-  }
+    return Initiative.findAll({
+      where: { city: city, UserId: {$ne: UserId} },
+      include: [Interests]
+    })
+   }
 
   if (state) {
-    return `select * from Initiatives
-            where country = '${country}'
-            and state = '${state}'
-            and UserId <> '${UserId}'`
-  }
+    return Initiative.findAll({
+      where: { state: state, UserId: {$ne: UserId}  },
+      include: [Interests]
+    })
+   }
+
   if (country) {
-    return `select * from Initiatives
-            where country = '${country}
-            and UserId <> '${UserId}'`
+    return Initiative.findAll({
+      where: { country: country, UserId: {$ne: UserId}  },
+      include: [Interests]
+    })
+
   }
-  return `select * from Initiatives`
+
+  if (!city && !state && !country) {
+    return Initiative.findAll({
+      include: [Interests]
+    })
+  }
 }
 
 const searchNearestInitiatives = async ({ country, state, city, UserId }) => {
   const query = createQuery({ country, state, city, UserId})
 
-  let result = await Initiative.sequelize.query(query, {
-    raw: true
-  })
+  let result = await query
 
   // city not found? search again
   if (result[0].length === 0 && city != null) {
@@ -56,12 +61,13 @@ const searchNearestInitiatives = async ({ country, state, city, UserId }) => {
 
 module.exports = class InitiativeRepository {
   async findNearest(currentUser) {
+    console.log('currentUser', currentUser.id)
     const result = await searchNearestInitiatives({
       country: currentUser.country,
       state: currentUser.state,
       city: currentUser.city,
       UserId: currentUser.id
     })
-    return result[0]
+    return result
   }
 }
