@@ -87,8 +87,12 @@ module.exports = class Initiatives {
           })
         }
 
+        const initiatives = await Initiative.findAll({
+          include: [Interests]
+        })
+
         return res.status(200).json({
-          data: initiativeWithInterests.map(initiative => {
+          data: initiatives.map(initiative => {
             return shortJson.format(initiative)
           })
         })

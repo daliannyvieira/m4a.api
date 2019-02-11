@@ -8,7 +8,7 @@ chai.use(chaiHttp);
 
 let user = {
   "email": "teste60@gmail.com",
-  "username": "teste",
+  "username": "teste1",
   "userProfile": "Volunteer",
   "latlong": {
     "type": "Point",
