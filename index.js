@@ -45,7 +45,19 @@ class Server {
         methods: ['GET']
       },
       {
-        path: '/interests/Fields' || '/interests/Causes' || '/interests/SDGs' || '/interests/Skills',
+        path: '/interests/Fields',
+        methods: ['GET']
+      },
+      {
+        path: '/interests/Causes',
+        methods: ['GET']
+      },
+      {
+        path: '/interests/SDGs',
+        methods: ['GET']
+      },
+      {
+        path: '/interests/Skills',
         methods: ['GET']
       },
       {
