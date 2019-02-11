@@ -6,8 +6,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       validate: {
         isIn: {
-          args: [['Areas', 'Causes',  'SDG', 'Skills']],
-          msg: "type must be a 'Areas', 'Causes', 'SDG' or 'Skills'"
+          args: [['Fields', 'Causes',  'SDGs', 'Skills']],
+          msg: "Type must be an 'Fields', 'Causes', 'SDGs' or 'Skills'"
         }
       }
     }
