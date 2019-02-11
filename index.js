@@ -49,6 +49,10 @@ class Server {
         methods: ['GET']
       },
       {
+        path: '/login',
+        methods: ['POST']
+      },
+      {
         path: '/login/verify',
         methods: ['GET']
       }
