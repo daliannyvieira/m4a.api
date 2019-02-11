@@ -4,6 +4,7 @@ const { sendAvatar, handleImage } = require('../../domain/firebaseStorage');
 const { login } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
+const UserRelationships = require('../responses/users-relationships');
 
 module.exports = class Users {
   constructor(router) {
@@ -49,7 +50,7 @@ module.exports = class Users {
         if (req.body.interests) {
           const interests = await user.setInterests(req.body.interests);
           res.status(200).json({
-            data: UsersShort.format(user),
+            data: UsersLong.format(user),
             relationships: {
               interests
             },
@@ -87,7 +88,7 @@ module.exports = class Users {
           })
           if (user) {
             return res.status(200).json({
-              data: UsersLong.format(user)
+              data: UserRelationships.format(user)
             });
           }
         }
@@ -99,7 +100,7 @@ module.exports = class Users {
 
         if (user) {
           return res.status(200).json({
-            data: UsersLong.format(user)
+            data: UserRelationships.format(user)
           });
         }
 
