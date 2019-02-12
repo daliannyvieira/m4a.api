@@ -78,24 +78,34 @@ module.exports = class Initiatives {
     this.router.get('/initiatives', async (req, res) => {
       try {
         if (req.query.nearest) {
-          const result = await InitiativeRepository.findNearest(await loggedUser(req))
+          const user = await loggedUser(req)
+
+          if (user) {
+            const result = await InitiativeRepository.findNearest(user)
+            return res.status(200).json({
+              data: result.map(initiative => {
+                return shortJson.format(initiative)
+              })
+            })
+          }
+          else {
+            return res.status(500).json({
+              data: 'something is broken'
+            })
+          }
+        }
+
+        else {
+          const initiatives = await Initiative.findAll({
+            include: [Interests]
+          })
 
           return res.status(200).json({
-            data: result.map(initiative => {
+            data: initiatives.map(initiative => {
               return shortJson.format(initiative)
             })
           })
         }
-
-        const initiatives = await Initiative.findAll({
-          include: [Interests]
-        })
-
-        return res.status(200).json({
-          data: initiatives.map(initiative => {
-            return shortJson.format(initiative)
-          })
-        })
       }
       catch (err) {
         console.log(err)

@@ -3,18 +3,11 @@ const Op = require('sequelize').Op;
 
 const { Initiative, Interests, User } = require('../../domain/entities');
 
-const createQuery = ({ country, state, city, UserId, IdMatches }) => {
+const createQuery = ({ country, city, UserId, IdMatches }) => {
 
   if (city) {
     return Initiative.findAll({
       where: { city: city, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
-      include: [Interests]
-    })
-  }
-
-  if (state) {
-    return Initiative.findAll({
-      where: { state: state, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
       include: [Interests]
     })
   }
@@ -26,46 +19,37 @@ const createQuery = ({ country, state, city, UserId, IdMatches }) => {
     })
   }
 
-  if (!city && !state && !country) {
-    return Initiative.findAll({
-      where: { UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
-      include: [Interests]
-    })
-  }
+  return Initiative.findAll({
+    where: { UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
+    include: [Interests]
+  })
 }
 
-const searchNearestInitiatives = async ({ country, state, city, UserId, IdMatches }) => {
-  const query = createQuery({ country, state, city, UserId, IdMatches})
+const searchNearestInitiatives = async ({ country, city, UserId, IdMatches }) => {
+  let search = null
 
-  let result = await query
+  // Search initiatives by city
+  let result = await createQuery({ country, city, UserId, IdMatches})
 
-  // city not found? search again
-  if (result[0].length === 0 && city != null) {
-    result = await searchNearestInitiatives({ country, state, city: null })
+  // Search initiatives by country
+  if (result.length < 10) {
+    search = 'country'
+    result = await createQuery({ country, UserId, IdMatches})
   }
 
-  // state not found? search again
-  if (result[0].length === 0 && state != null) {
-    result = await searchNearestInitiatives({ country, state: null, city: null })
+  // Search all initiatives
+  if (result.length < 10 && search === 'country') {
+    search = 'all'
+    result = await createQuery({ UserId, IdMatches})
   }
 
-  // country not found? search again
-  if (result[0].length === 0 && country != null) {
-    result = await searchNearestInitiatives({
-      country: null,
-      state: null,
-      city: null
-    })
-  }
-  // nothing found? return universe :)
   return result
-}
+} 
 
 module.exports = class InitiativeRepository {
   async findNearest(currentUser) {
     const result = await searchNearestInitiatives({
       country: currentUser.country,
-      state: currentUser.state,
       city: currentUser.city,
       UserId: currentUser.id,
       IdMatches: currentUser.Initiatives.map(item => item.id)
