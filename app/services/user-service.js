@@ -1,6 +1,6 @@
 'use strict';
 const { User, Initiative, Interests } = require('../../domain/entities');
-const { sendAvatar, handleImage } = require('../../domain/firebaseStorage');
+const { uploadImageToStorage, multer } = require('../../domain/firebaseStorage');
 const { login } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
@@ -188,13 +188,40 @@ module.exports = class Users {
   }
 
   uploadAvatar() {
-    this.router.post("/users/uploadavatar", handleImage.single('avatar'), async (req, res) => {
+/*    this.router.post("/users/uploadavatar", upload.single('avatar'), async (req, res) => {
       try {
-        const file = await sendAvatar(req.file)
+        const file = await uploadImageToStorage(req.file)
         if (file) res.status(200).json({ message: file })
       }
+      
       catch (err) {
         res.status(500).json({ message: 'something is broken' })
+      }
+    });*/
+    this.router.post('/users/uploadavatar/:userId', multer.single('avatar'), async (req, res) => {
+      console.log('Upload Image');
+      try {
+        const user = await User.findOne({
+          where: { id: req.params.userId }
+        });
+
+        if (user) {
+          let file = req.file;
+          if (file) {
+            const image = await uploadImageToStorage(file, user.username)
+            if (image) res.status(200).json({ message: image })
+          }
+          else {
+            res.status(500).json({ message: 'file not found' })
+          }
+        }
+
+        else {
+          res.status(404).json({ message: 'user not found' })
+        }
+      }
+      catch (err) {
+        console.log(err);
       }
     });
   }

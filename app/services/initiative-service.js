@@ -5,7 +5,7 @@ const { InitiativeRepository } = require('../../domain/repositories');
 const shortJson = require('../responses/initiatives-short.js');
 const longJson = require('../responses/initiatives-long.js');
 const { loggedUser } = require('../../domain/auth')
-const { sendPhotos, handleImage } = require('../../domain/firebaseStorage');
+const { sendPhotos, upload } = require('../../domain/firebaseStorage');
 
 module.exports = class Initiatives {
   constructor(router) {
@@ -16,7 +16,6 @@ module.exports = class Initiatives {
     this.createInitiative();
     this.findInitiative();
     this.findInitiativesList();
-    this.uploadPhotos();
   }
 
   createInitiative() {
@@ -114,8 +113,8 @@ module.exports = class Initiatives {
     });
   }
 
-  uploadPhotos() {
-    this.router.post('/initiatives/uploadphotos/:initiativeId', handleImage.array('avatar', 5), async (req, res) => {
+/*  uploadPhotos() {
+    this.router.post('/initiatives/uploadphotos/:initiativeId', upload.array('avatar', 5), async (req, res) => {
       try {
         console.log('searching initiative...')
         const find = await Initiative.findOne({
@@ -159,6 +158,6 @@ module.exports = class Initiatives {
         res.status(500).json({ message: 'something is broken' })
       }
     })
-  }
+  }*/
 
 };
