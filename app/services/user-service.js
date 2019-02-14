@@ -1,6 +1,6 @@
 'use strict';
 const { User, Initiative, Interests } = require('../../domain/entities');
-const { uploadAvatar, multer } = require('../../domain/firebaseStorage');
+const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { login } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
@@ -188,7 +188,7 @@ module.exports = class Users {
   }
 
   uploadAvatar() {
-    this.router.post('/users/uploadavatar/:userId', multer.single('avatar'), async (req, res) => {
+    this.router.post('/users/uploadavatar/:userId', multer.single('image'), async (req, res) => {
       try {
         const user = await User.findOne({
           where: { id: req.params.userId }
@@ -199,7 +199,7 @@ module.exports = class Users {
           let file = req.file
 
           if (file) {
-            const firebase = await uploadAvatar(file, username)
+            const firebase = await uploadImage(file, username)
 
             if (firebase) {
               const avatar = await user.update(
@@ -209,7 +209,7 @@ module.exports = class Users {
             }
           }
           else {
-            res.status(500).json({ message: 'file not found' })
+            res.status(404).json({ message: 'file not found' })
           }
         }
         else {
