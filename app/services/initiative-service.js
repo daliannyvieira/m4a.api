@@ -1,11 +1,11 @@
 'use strict';
 const { Initiative, Match, User, Interests, InitiativesImages } = require('../../domain/entities');
 const { InitiativeRepository } = require('../../domain/repositories');
-
-const shortJson = require('../responses/initiatives-short.js');
-const longJson = require('../responses/initiatives-long.js');
+const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { loggedUser } = require('../../domain/auth')
 const { sendPhotos, upload } = require('../../domain/firebaseStorage');
+const shortJson = require('../responses/initiatives-short.js');
+const longJson = require('../responses/initiatives-long.js');
 
 module.exports = class Initiatives {
   constructor(router) {
@@ -16,6 +16,7 @@ module.exports = class Initiatives {
     this.createInitiative();
     this.findInitiative();
     this.findInitiativesList();
+    this.uploadPhotos();
   }
 
   createInitiative() {
@@ -113,32 +114,21 @@ module.exports = class Initiatives {
     });
   }
 
-/*  uploadPhotos() {
-    this.router.post('/initiatives/uploadphotos/:initiativeId', upload.array('avatar', 5), async (req, res) => {
+  uploadPhotos() {
+    this.router.post('/initiatives/uploadphotos/:initiativeId', multer.array('image', 5), async (req, res) => {
       try {
-        console.log('searching initiative...')
         const find = await Initiative.findOne({
           where: { id: req.params.initiativeId }
         })
 
         if (find) {
-          console.log('sending images to firebase')
           const saveFirebase = await Promise.all(
-            req.files.map(item => {
-                console.log('saving...')
-                return sendPhotos({
-                  initiative: find,
-                  data: item
-                })
-              }
-            )
+            req.files.map(item => uploadImage(item, find.name))
           )
 
           if (saveFirebase) {
-            console.log('sending images to mysql')
             const saveMySQL = await Promise.all(
               saveFirebase.map(item => {
-                console.log('saving...')
                 InitiativesImages.create({
                   InitiativeId: req.params.initiativeId,
                   image: item
@@ -149,15 +139,18 @@ module.exports = class Initiatives {
             if (saveMySQL) {
               return res.status(200).json({ data: saveFirebase })
             }
-          } 
+          }
+        }
+
+        else {
+          res.status(404).json({ message: 'initiative not found' })
         }
 
       }
       catch (err) {
-        console.log(err)
         res.status(500).json({ message: 'something is broken' })
       }
     })
-  }*/
+  }
 
 };

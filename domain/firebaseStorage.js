@@ -18,13 +18,13 @@ const multer = Multer({
   }
 });
 
-const uploadAvatar = async (file, username) => {
+const uploadImage = async (file, fileName) => {
   let prom = new Promise((resolve, reject) => {
     if (!file) {
       reject('No image file');
     }
 
-    let newFileName = `${username}_${Date.now()}`;
+    let newFileName = `${fileName}_${Date.now()}`;
 
     let fileUpload = bucket.file(newFileName);
 
@@ -40,12 +40,6 @@ const uploadAvatar = async (file, username) => {
     });
 
     blobStream.on('finish', () => {
-/*    
-      const file = bucket.file(newFileName).getSignedUrl({
-        action: 'read',
-        expires: '03-09-2491'
-      })
-*/
       const url = `https://match4action-11b34.appspot.com.storage.googleapis.com/${newFileName}`
       resolve(url);
     });
@@ -55,4 +49,4 @@ const uploadAvatar = async (file, username) => {
   return prom;
 }
 
-module.exports = { uploadAvatar, multer };
+module.exports = { uploadImage, multer };
