@@ -1,6 +1,6 @@
 'use strict';
 const { User, Initiative, Interests } = require('../../domain/entities');
-const { sendAvatar, handleImage } = require('../../domain/firebaseStorage');
+const { uploadAvatar, multer } = require('../../domain/firebaseStorage');
 const { login } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
@@ -188,13 +188,36 @@ module.exports = class Users {
   }
 
   uploadAvatar() {
-    this.router.post("/users/uploadavatar", handleImage.single('avatar'), async (req, res) => {
+    this.router.post('/users/uploadavatar/:userId', multer.single('avatar'), async (req, res) => {
       try {
-        const file = await sendAvatar(req.file)
-        if (file) res.status(200).json({ message: file })
+        const user = await User.findOne({
+          where: { id: req.params.userId }
+        })
+
+        if (user) {
+          let username = user.username
+          let file = req.file
+
+          if (file) {
+            const firebase = await uploadAvatar(file, username)
+
+            if (firebase) {
+              const avatar = await user.update(
+                { avatar: firebase }, { where: { id: req.params.userId }
+              })
+              res.status(200).json({ data: UsersLong.format(avatar) })
+            }
+          }
+          else {
+            res.status(500).json({ message: 'file not found' })
+          }
+        }
+        else {
+          res.status(404).json({ message: 'user not found' })
+        }
       }
       catch (err) {
-        res.status(500).json({ message: 'something is broken' })
+        console.log(err)
       }
     });
   }

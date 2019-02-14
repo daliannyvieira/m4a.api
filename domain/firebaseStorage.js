@@ -1,97 +1,58 @@
-const firebase = require('firebase');
-const { Storage } = require('@google-cloud/storage');
 const fs = require('fs')
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
-const multer = require('multer');
+const Multer = require('multer');
+const admin = require("firebase-admin");
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  }
+admin.initializeApp({
+  credential: admin.credential.cert('./infra/firebase-adminsdk.json'),
+  storageBucket: "match4action-11b34.appspot.com"
 });
 
-const imageFilter = function (req, file, cb) {
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-      return cb(new Error('Only image files are allowed!'), false);
-  }
-  cb(null, true);
-};
+const bucket = admin.storage().bucket();
 
-const handleImage = multer({
-  storage: storage,
+const multer = Multer({
+  storage: Multer.memoryStorage(),
   limits: {
-    fileSize: 1024 * 1024 * 10000
-  },
-  fileFilter: imageFilter
+    fileSize: 5 * 1024 * 1024
+  }
 });
 
-const cleanFolder = (file) => {
-  fs.unlink(file, (err) => {
-    if (err) throw err;
+const uploadAvatar = async (file, username) => {
+  let prom = new Promise((resolve, reject) => {
+    if (!file) {
+      reject('No image file');
+    }
+
+    let newFileName = `${username}_${Date.now()}`;
+
+    let fileUpload = bucket.file(newFileName);
+
+    const blobStream = fileUpload.createWriteStream({
+      metadata: {
+        contentType: file.mimetype
+      },
+      predefinedAcl: "publicRead"
+    });
+
+    blobStream.on('error', (error) => {
+      reject('Something is wrong! Unable to upload at the moment.');
+    });
+
+    blobStream.on('finish', () => {
+/*    
+      const file = bucket.file(newFileName).getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491'
+      })
+*/
+      const url = `https://match4action-11b34.appspot.com.storage.googleapis.com/${newFileName}`
+      resolve(url);
+    });
+
+    blobStream.end(file.buffer);
   });
+  return prom;
 }
 
-const createPublicFileURL = (storageName) => {
-  return `http://storage.googleapis.com/${bucketName}/${storageName}`;
-}
-
-const projectId = config.projectId
-const bucketName = `${projectId}.appspot.com`;
-const keyFilename='./infra/firebase-adminsdk.json';
-
-const firebaseStorage = new Storage({
-  projectId: projectId,
-  keyFilename: keyFilename
-});
-
-const bucket = firebaseStorage.bucket(bucketName);
-
-const sendAvatar = async (file) => {
-  try {
-    const storageFile = await bucket.upload(file.path, {
-      destination: `user-avatar/${file.filename}`,
-      public: true,
-    })
-    if (storageFile) {
-      cleanFolder(file.path)
-      return createPublicFileURL(file.filename)
-    }
-    cleanFolder(file.path)
-    throw err
-  }
-  catch (err) {
-    console.error('ERROR:', err);
-    cleanFolder(file.path)
-    throw err;
-  }
-}
-
-const sendPhotos = async (file) => {
-  try {
-    const imgs = file.data
-    const initiativeName = file.initiative.name
-
-    const storageFile = await bucket.upload(imgs.path, {
-      destination: `initiative-photos/${initiativeName}/${file.data.filename}`,
-      public: true,
-    })
-
-    if (storageFile) {
-      cleanFolder(imgs.path)
-      return createPublicFileURL(`initiative-photos/${initiativeName}/${file.data.filename}`)
-    }
-    cleanFolder(imgs.path)
-    throw err
-  }
-  catch (err) {
-    console.error('ERROR:', err);
-    cleanFolder(imgs.path)
-    throw err;
-  }
-}
-
-module.exports = { sendAvatar, sendPhotos, handleImage };
+module.exports = { uploadAvatar, multer };
