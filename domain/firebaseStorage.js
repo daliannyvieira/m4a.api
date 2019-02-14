@@ -1,29 +1,29 @@
-const firebase = require('firebase');
-const { Storage } = require('@google-cloud/storage');
 const fs = require('fs')
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
 const Multer = require('multer');
+const admin = require("firebase-admin");
 
-const storage = new Storage({
-  projectId: config.projectId,
-  keyFilename: './infra/firebase-adminsdk.json'
+admin.initializeApp({
+  credential: admin.credential.cert('./infra/firebase-adminsdk.json'),
+  storageBucket: "match4action-11b34.appspot.com"
 });
 
-const bucket = storage.bucket('gs://match4action-11b34.appspot.com');
+const bucket = admin.storage().bucket();
 
 const multer = Multer({
   storage: Multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024 // no larger than 5mb, you can change as needed.
+    fileSize: 5 * 1024 * 1024
   }
 });
 
-const uploadImageToStorage = async (file, username) => {
+const uploadAvatar = async (file, username) => {
   let prom = new Promise((resolve, reject) => {
     if (!file) {
       reject('No image file');
     }
+
     let newFileName = `${username}_${Date.now()}`;
 
     let fileUpload = bucket.file(newFileName);
@@ -31,7 +31,8 @@ const uploadImageToStorage = async (file, username) => {
     const blobStream = fileUpload.createWriteStream({
       metadata: {
         contentType: file.mimetype
-      }
+      },
+      predefinedAcl: "publicRead"
     });
 
     blobStream.on('error', (error) => {
@@ -39,7 +40,13 @@ const uploadImageToStorage = async (file, username) => {
     });
 
     blobStream.on('finish', () => {
-      const url = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
+/*    
+      const file = bucket.file(newFileName).getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491'
+      })
+*/
+      const url = `https://match4action-11b34.appspot.com.storage.googleapis.com/${newFileName}`
       resolve(url);
     });
 
@@ -48,4 +55,4 @@ const uploadImageToStorage = async (file, username) => {
   return prom;
 }
 
-module.exports = { uploadImageToStorage, multer };
+module.exports = { uploadAvatar, multer };
