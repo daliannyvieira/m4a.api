@@ -26,9 +26,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     bio: {
       type: DataTypes.STRING,
-      len: {
-        args: [4,30],
-        msg: "bio must be between 4 and 30 characters"
+      validate: {
+        len: {
+          args: [4, 30],
+          msg: "bio must be between 4 and 100 characters"
+        }
       }
     },
     birthday: DataTypes.DATE,
