@@ -97,7 +97,7 @@ module.exports = class Initiatives {
 
         else {
           const initiatives = await Initiative.findAll({
-            include: [Interests]
+            include: [Interests, InitiativesImages]
           })
 
           return res.status(200).json({
