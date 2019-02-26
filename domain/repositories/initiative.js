@@ -1,27 +1,27 @@
 "use strict"
 const Op = require('sequelize').Op;
 
-const { Initiative, Interests, User } = require('../../domain/entities');
+const { Initiative, Interests, User, InitiativesImages } = require('../../domain/entities');
 
 const createQuery = ({ country, city, UserId, IdMatches }) => {
 
   if (city) {
     return Initiative.findAll({
       where: { city: city, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
-      include: [Interests]
+      include: [Interests, InitiativesImages]
     })
   }
 
   if (country) {
     return Initiative.findAll({
       where: { country: country, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
-      include: [Interests]
+      include: [Interests, InitiativesImages]
     })
   }
 
   return Initiative.findAll({
     where: { UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
-    include: [Interests]
+    include: [Interests, InitiativesImages]
   })
 }
 

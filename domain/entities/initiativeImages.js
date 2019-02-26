@@ -1,6 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
   const InitiativesImages = sequelize.define('InitiativesImages', {
-    description: DataTypes.STRING,
     image: {
       type: DataTypes.STRING,
       allowNull: false

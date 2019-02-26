@@ -1,6 +1,6 @@
 'use strict';
 const { login, loggedUser } = require('../../domain/auth');
-const UsersLong = require('../responses/users-long');
+const UserRelationships = require('../responses/users-relationships');
 
 module.exports = class Login {
   constructor(router) {
@@ -33,7 +33,9 @@ module.exports = class Login {
       try {
         const user = await loggedUser(req)
         if (user) {
-          return res.status(200).json({ data: UsersLong.format(user) });
+          return res.status(200).json({
+            data: UserRelationships.format(user)
+          });
         }
         return res.status(401).end()
       }

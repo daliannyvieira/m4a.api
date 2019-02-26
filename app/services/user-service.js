@@ -1,5 +1,5 @@
 'use strict';
-const { User, Initiative, Interests } = require('../../domain/entities');
+const { User, Initiative, Interests, InitiativesImages } = require('../../domain/entities');
 const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { login } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
@@ -84,12 +84,22 @@ module.exports = class Users {
         if (include === 'initiatives') {
           const user = await User.findOne({
             where: { id: req.params.id },
-            include: [Interests, {'model': Initiative, as: 'UserInitiatives'}, Initiative]
+            include: [
+              {
+                'model': Initiative, as: 'UserInitiatives',
+                include: [InitiativesImages]
+              },
+              {
+                'model': Initiative,
+                include: [InitiativesImages]
+              }
+            ]
           })
+
           if (user) {
             return res.status(200).json({
               data: UserRelationships.format(user)
-            });
+            });            
           }
         }
 

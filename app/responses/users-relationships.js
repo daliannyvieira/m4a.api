@@ -1,5 +1,6 @@
 const UsersRelationship = {
   format: (user) => {
+    console.log(user.Initiatives)
     return {
       type: `User`,
       id: user.id,
@@ -32,14 +33,22 @@ const UsersRelationship = {
           name: initiative.name,
           website: initiative.website,
           bio: initiative.bio,
-          avatar: initiative.avatar
+          avatar: initiative.avatar,
+          images: initiative.InitiativesImages && initiative.InitiativesImages.map(img => ({
+            id: img.id,
+            img: img.image
+          }))
         })),
         usersInitiatives: user.UserInitiatives && user.UserInitiatives.map(initiative => ({
           id: initiative.id,
           name: initiative.name,
           website: initiative.website,
           bio: initiative.bio,
-          avatar: initiative.avatar
+          avatar: initiative.avatar,
+          images: initiative.InitiativesImages && initiative.InitiativesImages.map(img => ({
+            id: img.id,
+            img: img.image
+          }))
         }))
       }
     }
