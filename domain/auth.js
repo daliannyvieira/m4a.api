@@ -5,18 +5,27 @@ const config = require(__dirname + '/../config/config.js')[env];
 
 const secret = config.jwtSecret
 
-const login = async (email) => {
+const login = async (email, password) => {
   const user = await User.findOne({
     where: { email: email },
   })
+
   if (!user) {
-    return undefined
+    return 'USER_NOT_FOUND'
   }
-  return jwt.sign({
-    email: user.email },
-    secret, {
-    expiresIn: '7d'
-  });
+
+  if (user.password != password) {
+    return 'WRONG_PASSWORD'
+  }
+
+  else {
+    return jwt.sign({
+      email: user.email },
+      secret, {
+      expiresIn: '7d'
+    });
+  }
+
 }
 
 const loggedUser = async (req) => {
