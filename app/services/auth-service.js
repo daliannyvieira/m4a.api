@@ -15,12 +15,20 @@ module.exports = class Login {
   getToken() {
     this.router.post('/login', async (req, res) => {
       try {
-        const { email } = req.body
-        const token = await login(email)
-        if (token) {
+        const { email, password } = req.body
+        const token = await login(email, password)
+
+        if (token === 'USER_NOT_FOUND') {
+          return res.status(404).json({ message: 'Didn’t find anything here!'})
+        }
+
+        if (token === 'WRONG_PASSWORD') {
+          return res.status(403).json({ message: 'Wrong password' })
+        }
+
+        else {
           return res.status(200).json({ data: token })
         }
-        return res.status(404).json({ message: 'Didn’t find anything here!'})
       }
       catch (err) {
         res.status(500).json(err)
