@@ -1,6 +1,5 @@
 const UsersRelationship = {
   format: (user) => {
-    console.log(user.Initiatives)
     return {
       type: `User`,
       id: user.id,
