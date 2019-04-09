@@ -99,7 +99,7 @@ module.exports = class Users {
           if (user) {
             return res.status(200).json({
               data: UserRelationships.format(user)
-            });            
+            });
           }
         }
 
