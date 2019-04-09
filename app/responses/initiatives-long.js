@@ -26,6 +26,17 @@ const longJson = {
             id: interest.id,
             description: interest.description,
             type: interest.type
+          })),
+          images: initiative.InitiativesImages && initiative.InitiativesImages.map(img => ({
+            id: img.id,
+            image: img.image
+          })),
+          matches: initiative.Matches && initiative.Matches.map(match => ({
+            id: match.id,
+            name: match.name,
+            website: match.website,
+            bio: match.bio,
+            avatar: match.avatar
           }))
         }
       }

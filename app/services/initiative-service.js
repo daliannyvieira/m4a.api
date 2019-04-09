@@ -54,13 +54,19 @@ module.exports = class Initiatives {
   findInitiative() {
     this.router.get('/initiatives/:initiativeId', async (req, res) => {
       try {
+        const user = await loggedUser(req)
+
         const initiative = await Initiative.findOne({
-          where: { id: req.params.initiativeId }
+          where: { id: req.params.initiativeId },
+          include: [Interests, InitiativesImages]
         })
+
+        const data = initiative
+        data.Matches = user.Initiatives
 
         if (initiative) {
           return res.status(200).json({
-            data: longJson.format(initiative)
+            data: longJson.format(data)
           });
         }
 

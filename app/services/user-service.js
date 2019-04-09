@@ -46,21 +46,21 @@ module.exports = class Users {
       try {
         const user = await User.create(req.body)
         const token = await login(req.body.email)
+        const data = UsersLong.format(user)
+        data.token = token;
 
         if (req.body.interests) {
           const interests = await user.setInterests(req.body.interests);
           res.status(200).json({
-            data: UsersLong.format(user),
+            data: data,
             relationships: {
               interests
-            },
-            token: token
+            }
           })
         }
         else {
           res.status(200).json({
-            data: UsersLong.format(user),
-            token: token
+            data: data
           })
         }
       }

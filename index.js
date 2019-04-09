@@ -1,6 +1,5 @@
 'use strict';
 const express = require('express');
-const cors = require('cors')
 const bodyParser = require('body-parser');
 const { requiresAuth } = require('./domain/auth');
 
@@ -22,7 +21,18 @@ class Server {
   }
 
   setup () {
-    this.app.use(cors())
+    this.app.use((req, res, next) => {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+      );
+      if (req.method === 'OPTIONS') {
+        res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
+        return res.status(200).json({});
+      }
+      next();
+    });
     this.app.enable('trust proxy');
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({extended: true}));
