@@ -24,9 +24,6 @@ module.exports = (sequelize, DataTypes) => {
         },
       }
     },
-    password: {
-      type: DataTypes.STRING
-    },
     bio: {
       type: DataTypes.STRING,
       validate: {
