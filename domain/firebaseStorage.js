@@ -4,9 +4,11 @@ const config = require(__dirname + '/../config/config.js')[env];
 const Multer = require('multer');
 const admin = require("firebase-admin");
 
+let storageBucket = "match4action-9e993.appspot.com"
+
 admin.initializeApp({
-  credential: admin.credential.cert('./infra/firebase-adminsdk.json'),
-  storageBucket: "match4action-9e993.appspot.com"
+  storageBucket,
+  credential: admin.credential.cert('./infra/firebase-adminsdk.json')
 });
 
 const bucket = admin.storage().bucket();
@@ -40,7 +42,7 @@ const uploadImage = async (file, fileName) => {
     });
 
     blobStream.on('finish', () => {
-      const url = `https://match4action-11b34.appspot.com.storage.googleapis.com/${newFileName}`
+      const url = `https://${storageBucket}.storage.googleapis.com/${newFileName}`
       resolve(url);
     });
 
