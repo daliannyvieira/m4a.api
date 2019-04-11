@@ -40,7 +40,7 @@ const uploadImage = async (file, fileName) => {
     });
 
     blobStream.on('finish', () => {
-      const url = `https://match4action-11b34.appspot.com.storage.googleapis.com/${newFileName}`
+      const url = `https://match4action-9e993.appspot.com.storage.googleapis.com/${newFileName}`
       resolve(url);
     });
 
