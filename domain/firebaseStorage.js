@@ -6,7 +6,7 @@ const admin = require("firebase-admin");
 
 admin.initializeApp({
   credential: admin.credential.cert('./infra/firebase-adminsdk.json'),
-  storageBucket: "match4action-11b34.appspot.com"
+  storageBucket: "match4action-9e993.appspot.com"
 });
 
 const bucket = admin.storage().bucket();
