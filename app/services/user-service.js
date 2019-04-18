@@ -19,7 +19,8 @@ module.exports = class Users {
     this.deleteUser();
     this.uploadAvatar();
     this.updateUserInterests();
-    this.matchInitiative();
+    this.createMatch();
+    this.removeMatch();
   }
 
   findUsersList() {
@@ -232,16 +233,16 @@ module.exports = class Users {
     });
   }
 
-  matchInitiative() {
-    this.router.post('/users/:userId/match', async (req, res) => {
+  createMatch() {
+    this.router.post('/users/:userId/match/:initiativeId', async (req, res) => {
       try {
         const user = await User.findOne({
           where: { id: req.params.userId },
           include: [{'model': Initiative, as: 'UserInitiatives'}]
         })
-        if (user && req.body.initiativeId) {
+        if (user && req.params.initiativeId) {
           const isOwner = user.UserInitiatives.find((initiative) => {
-            return initiative.dataValues.id == req.body.initiativeId
+            return initiative.dataValues.id == req.params.initiativeId
           })
           if (isOwner) {
             return res.status(404).json({
@@ -249,10 +250,10 @@ module.exports = class Users {
             });
           }
           else {
-            await user.addInitiative(req.body.initiativeId);
+            await user.addInitiative(req.params.initiativeId);
 
             return res.status(201).json({
-              message: 'success.'
+              message: 'Match was created with success.'
             });
           }
         }
@@ -261,6 +262,40 @@ module.exports = class Users {
         });
       }     
       catch (err) {
+        console.log(err)
+        res.status(500).json(err)
+      }
+    });
+  }
+
+  removeMatch() {
+    this.router.delete('/users/:userId/match/:initiativeId', async (req, res) => {
+      try {
+        const user = await User.findOne({
+          where: { id: req.params.userId },
+          include: [{'model': Initiative, as: 'UserInitiatives'}]
+        })
+        if (user) {
+          const find = await user.removeInitiative(req.params.initiativeId)
+          if (find === 1) {
+            return res.status(404).json({
+              message: 'Match was removed with success.'
+            });
+          }
+          else {
+            return res.status(404).json({
+              message: 'Match was not found.'
+            });
+          }
+        }
+        else {
+          return res.status(404).json({
+            message: 'User not found.'
+          });
+        }
+      }
+      catch (err) {
+        console.log(err)
         res.status(500).json(err)
       }
     });

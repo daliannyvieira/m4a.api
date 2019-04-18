@@ -1,9 +1,8 @@
 'use strict';
-const { Initiative, Match, User, Interests, InitiativesImages } = require('../../domain/entities');
+const { Initiative, Interests, InitiativesImages } = require('../../domain/entities');
 const { InitiativeRepository } = require('../../domain/repositories');
 const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { loggedUser } = require('../../domain/auth')
-const { sendPhotos, upload } = require('../../domain/firebaseStorage');
 const shortJson = require('../responses/initiatives-short.js');
 const longJson = require('../responses/initiatives-long.js');
 
@@ -17,6 +16,7 @@ module.exports = class Initiatives {
     this.findInitiative();
     this.findInitiativesList();
     this.uploadPhotos();
+    this.deleteInitiative();
   }
 
   createInitiative() {
@@ -143,20 +143,48 @@ module.exports = class Initiatives {
             )
 
             if (saveMySQL) {
-              return res.status(200).json({ data: saveFirebase })
+              return res.status(200).json({
+                data: saveFirebase
+              })
             }
           }
         }
 
         else {
-          res.status(404).json({ message: 'initiative not found' })
+          res.status(404).json({
+            message: 'initiative not found'
+          })
         }
 
       }
       catch (err) {
-        res.status(500).json({ message: 'something is broken' })
+        res.status(500).json({
+          message: 'something is broken'
+        })
       }
     })
+  }
+
+  deleteInitiative() {
+    this.router.delete('/initiatives/:initiativeId', async (req, res) => {
+      try {
+        if (await Initiative.findOne({where: { id: req.params.initiativeId } })) {
+          if (await Initiative.destroy({ where: { id: req.params.initiativeId } })) {
+            return res.status(201).json({
+              message: 'Initiative has been deleted.'
+            });
+          }
+        }
+        return res.status(404).json({
+          message: 'Didn’t find anything here!'
+        });
+      }
+      catch (err){
+        res.status(500).json({
+          message: 'something is broken'
+        });
+      }
+    });
   }
 
 };
