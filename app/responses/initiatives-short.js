@@ -6,6 +6,9 @@ const shortJson = {
       attributes: {
         name: initiative.name,
         website: initiative.website,
+        address: initiative.address,
+        start: initiative.start,
+        finish: initiative.finish,
         avatar: initiative.avatar,
         bio: initiative.bio,
         country: initiative.country,
