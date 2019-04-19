@@ -131,7 +131,6 @@ module.exports = class Initiatives {
           const saveFirebase = await Promise.all(
             req.files.map(item => uploadImage(item, find.name))
           )
-
           if (saveFirebase) {
             const saveMySQL = await Promise.all(
               saveFirebase.map(item => {
@@ -170,7 +169,7 @@ module.exports = class Initiatives {
       try {
         if (await Initiative.findOne({where: { id: req.params.initiativeId } })) {
           if (await Initiative.destroy({ where: { id: req.params.initiativeId } })) {
-            return res.status(201).json({
+            return res.status(200).json({
               message: 'Initiative has been deleted.'
             });
           }
@@ -180,6 +179,7 @@ module.exports = class Initiatives {
         });
       }
       catch (err){
+        console.log(err)
         res.status(500).json({
           message: 'something is broken'
         });
