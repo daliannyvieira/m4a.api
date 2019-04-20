@@ -278,7 +278,7 @@ module.exports = class Users {
         if (user) {
           const find = await user.removeInitiative(req.params.initiativeId)
           if (find === 1) {
-            return res.status(404).json({
+            return res.status(200).json({
               message: 'Match was removed with success.'
             });
           }
