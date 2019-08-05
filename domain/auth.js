@@ -58,5 +58,43 @@ const requiresAuth = (allowedRoutes) => {
   }
 }
 
+const routerList = [
+  {
+    path: '/',
+    methods: ['GET']
+  },
+  {
+    path: '/users',
+    methods: ['POST']
+  },
+  {
+    path: '/interests',
+    methods: ['GET']
+  },
+  {
+    path: '/interests/Fields',
+    methods: ['GET']
+  },
+  {
+    path: '/interests/Causes',
+    methods: ['GET']
+  },
+  {
+    path: '/interests/SDGs',
+    methods: ['GET']
+  },
+  {
+    path: '/interests/Skills',
+    methods: ['GET']
+  },
+  {
+    path: '/login',
+    methods: ['POST']
+  },
+  {
+    path: '/login/verify',
+    methods: ['GET']
+  }
+]
 
-module.exports = { login, loggedUser, requiresAuth };
+module.exports = { login, loggedUser, requiresAuth, routerList };
