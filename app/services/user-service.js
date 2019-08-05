@@ -139,7 +139,8 @@ module.exports = class Users {
           })
 
           return res.status(201).json({
-            message: 'User has been updated.'
+            message: 'User has been updated.',
+            data: update.dataValues
           });
         }
         return res.status(404).json({
@@ -147,7 +148,6 @@ module.exports = class Users {
         });
       }
       catch (err) {
-        console.log(err)
         return res.status(500).json(err);
       }
     });
@@ -160,13 +160,19 @@ module.exports = class Users {
           where: { id: req.params.userId }
         });
         if (user){
-          await user.setInterests(req.body.interests);
-          
-          return res.status(201).json({
-            message: 'Interests has been updated.'
-          });
+          if (req.body.interests) {
+            await user.setInterests(req.body.interests);
+
+            return res.status(201).json({
+              message: 'Interests has been updated.'
+            });
+          }
+          else {
+            return res.status(405).json({
+              message: 'Interests was not declared.'
+            });
+          }
         }
-        
         return res.status(404).json({
           message: 'User not found.'
         });
