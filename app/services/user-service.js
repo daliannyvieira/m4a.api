@@ -141,7 +141,7 @@ module.exports = class Users {
           })
           return res.status(201).json({
             message: 'User has been updated.',
-            data: update.dataValues
+            data: UsersLong.format(update.dataValues)
           });
         }
         return res.status(404).json({
@@ -160,7 +160,9 @@ module.exports = class Users {
         const user = await User.findOne({
           where: { id: req.params.userId }
         });
-        if (user){
+
+        const token = await loggedUser(req)
+        if (user && token && user.id === token.id) {
           if (req.body.interests) {
             await user.setInterests(req.body.interests);
 

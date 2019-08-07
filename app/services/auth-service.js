@@ -1,5 +1,6 @@
 'use strict';
 const { login, loggedUser } = require('../../domain/auth');
+const request = require('request-promise');
 const UserRelationships = require('../responses/users-relationships');
 
 module.exports = class Login {
@@ -15,14 +16,27 @@ module.exports = class Login {
   getToken() {
     this.router.post('/login', async (req, res) => {
       try {
-        const { email } = req.body
-        const token = await login(email)
+        const { user_access_token } = req.body;
+        const fields = "email,name,picture.width(500).height(500)";
+        const options = {
+          method: 'GET',
+          uri: `https://graph.facebook.com/v2.8/me`,
+          qs: {
+            access_token: user_access_token,
+            fields: fields
+          }
+        };
+        const facebookData = await request(options);
+        const token = await login(JSON.parse(facebookData).email);
         if (token) {
           return res.status(200).json({ data: token })
         }
-        return res.status(404).json({ message: 'Didn’t find anything here!'})
+        return res.status(404).json({
+          message: 'Didn’t find anything here!'
+        })
       }
       catch (err) {
+        console.log('err', err)
         res.status(500).json(err)
       }
     });
