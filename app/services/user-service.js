@@ -5,6 +5,7 @@ const { login } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
 const UserRelationships = require('../responses/users-relationships');
+const { loggedUser } = require('../../domain/auth');
 
 module.exports = class Users {
   constructor(router) {
@@ -132,15 +133,15 @@ module.exports = class Users {
         const user = await User.findOne({
           where: { id: req.params.userId }
         })
-        if (user) {
+        const token = await loggedUser(req)
+        if (user.id === token.id) {
           const update = await user.update(
             req.body, {
             where: { id: req.params.userId }
           })
-
           return res.status(201).json({
             message: 'User has been updated.',
-            data: update.dataValues
+            data: UsersLong.format(update.dataValues)
           });
         }
         return res.status(404).json({
@@ -159,7 +160,9 @@ module.exports = class Users {
         const user = await User.findOne({
           where: { id: req.params.userId }
         });
-        if (user){
+
+        const token = await loggedUser(req)
+        if (user && token && user.id === token.id) {
           if (req.body.interests) {
             await user.setInterests(req.body.interests);
 
