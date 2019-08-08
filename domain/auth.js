@@ -88,7 +88,11 @@ const routerList = [
     methods: ['GET']
   },
   {
-    path: '/login',
+    path: '/login/facebook',
+    methods: ['POST']
+  },
+  {
+    path: '/login/google',
     methods: ['POST']
   },
   {

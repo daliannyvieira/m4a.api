@@ -9,12 +9,13 @@ module.exports = class Login {
   }
 
   expose() {
-    this.getToken();
+    this.validateFacebook();
+    this.validateGoogle();
     this.verifyToken();
   }
 
-  getToken() {
-    this.router.post('/login', async (req, res) => {
+  validateFacebook() {
+    this.router.post('/login/facebook', async (req, res) => {
       try {
         const { user_access_token } = req.body;
         const fields = "email,name,picture.width(500).height(500)";
@@ -29,7 +30,7 @@ module.exports = class Login {
         const facebookData = await request(options);
         const token = await login(JSON.parse(facebookData).email);
         if (token) {
-          return res.status(200).json({ data: token })
+          return res.status(201).json({ data: token })
         }
         return res.status(404).json({
           message: 'Didn’t find anything here!'
@@ -38,6 +39,39 @@ module.exports = class Login {
       catch (err) {
         console.log('err', err)
         res.status(500).json(err)
+      }
+    });
+  }
+
+  validateGoogle() {
+    this.router.post('/login/google', async (req, res) => {
+      try {
+        const { user_access_token } = req.body;
+        const options = {
+          method: 'GET',
+          uri: `https://www.googleapis.com/oauth2/v1/tokeninfo`,
+          qs: {
+            access_token: user_access_token,
+          }
+        };
+        const googleData = await request(options);
+        const token = await login(JSON.parse(googleData).email);
+        if (token) {
+          return res.status(201).json({
+            data: token
+          })
+        }
+        return res.status(404).json({
+          message: 'Didn’t find anything here!'
+        })
+      }
+      catch (err) {
+        if (JSON.parse(err.error).error === "invalid_token") {
+          return res.status(401).json({
+            message: 'Invalid token'
+          })
+        }
+        return res.status(500).json(err)
       }
     });
   }
