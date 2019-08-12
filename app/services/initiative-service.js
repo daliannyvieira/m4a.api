@@ -27,27 +27,34 @@ module.exports = class Initiatives {
         
         if (req.body.interests) {
           const interests = await initiative.setInterests(req.body.interests);
-          res.status(200).json({
-            data: longJson.format(initiative),
-            relationships: {
-              interests
+          return res.status(201).json({
+            data: {
+              type: `Initiative`,
+              id: initiative.id,
+              attributes: longJson.format(initiative),
+              relationships: longJson.format(initiative)
             }
           })
         }
 
-        res.status(200).json({
-          data: shortJson.format(initiative)
+        res.status(201).json({
+          data: {
+            type: `Initiative`,
+            id: initiative.id,
+            attributes: longJson.format(initiative)
+          }
         })
       }
 
       catch (err) {
-        const error = { message: err.message }
         const errors = err.errors && err.errors.map(err => ({
           message: err.message,
           type: err.type,
           field: err.path
         }))
-        res.status(500).json(errors || error)
+        res.status(500).json([{
+          message: err.name || errors
+        }])
       }
     });
   }
@@ -62,21 +69,30 @@ module.exports = class Initiatives {
           include: [Interests, InitiativesImages]
         })
 
-        const data = initiative
-        data.Matches = user.Initiatives
-
         if (initiative) {
+          const data = initiative
+          data.Matches = user.Initiatives
+
           return res.status(200).json({
-            data: longJson.format(data)
-          });
+            data: {
+              type: `Initiative`,
+              id: data.id,
+              attributes: longJson.format(data)
+            }
+          })
         }
 
         return res.status(404).json({
-          message: 'Didn’t find anything here!'
+          errors: [{
+            message: 'Didn’t find anything here!'
+          }]
         });
       }
       catch (err) {
-        res.status(500).json(err)
+        console.log('er',err)
+        res.status(500).json({
+          errors: [err]
+        });
       }
     });
   }
@@ -116,7 +132,9 @@ module.exports = class Initiatives {
       }
       catch (err) {
         console.log(err)
-        res.status(500).json(err)
+        res.status(500).json({
+          errors: [err]
+        });
       }
     });
   }
@@ -151,16 +169,18 @@ module.exports = class Initiatives {
         }
 
         else {
-          res.status(404).json({
-            message: 'initiative not found'
-          })
+          return res.status(404).json({
+            errors: [{
+              message: 'Didn’t find anything here!'
+            }]
+          });
         }
 
       }
       catch (err) {
         res.status(500).json({
-          message: 'something is broken'
-        })
+          errors: [err]
+        });
       }
     })
   }
@@ -176,17 +196,17 @@ module.exports = class Initiatives {
           }
         }
         return res.status(404).json({
-          message: 'Didn’t find anything here!'
+          errors: [{
+            message: 'Didn’t find anything here!'
+          }]
         });
       }
       catch (err){
         console.log(err)
         res.status(500).json({
-          message: 'something is broken',
-          err: err
+          errors: [err]
         });
       }
     });
   }
-
 };

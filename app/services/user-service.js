@@ -66,7 +66,7 @@ module.exports = class Users {
         else {
           return res.status(404).json({
             errors: [{
-              detail: 'Didn’t find anything here!'
+              message: 'Didn’t find anything here!'
             }]
           });
         }
@@ -107,7 +107,7 @@ module.exports = class Users {
         else {
           return res.status(404).json({
             errors: [{
-              detail: 'Didn’t find anything here!'
+              message: 'Didn’t find anything here!'
             }]
           });
         }
@@ -151,7 +151,7 @@ module.exports = class Users {
         else {
           return res.status(404).json({
             errors: [{
-              detail: 'Didn’t find anything here!'
+              message: 'Didn’t find anything here!'
             }]
           });
         }
@@ -168,11 +168,10 @@ module.exports = class Users {
   updateUser() {
     this.router.put('/users/:userId', async (req, res) => {
       try {
-        const user = await User.findOne({
-          where: { id: req.params.userId }
-        })
+        const user = await User.findOne({ where: { id: req.params.userId }})
         const token = await loggedUser(req)
-        if (user.id === token.id) {
+        
+        if (token && user && user.id === token.id) {
           const update = await user.update(
             req.body, {
             where: { id: req.params.userId }
@@ -182,12 +181,11 @@ module.exports = class Users {
             data: UsersLong.format(update.dataValues)
           });
         }
-          return res.status(404).json({
-            errors: [{
-              detail: 'Didn’t find anything here!'
-            }]
-          });
-
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!'
+          }]
+        });
       }
       catch (err) {
         console.log(err)
@@ -201,11 +199,9 @@ module.exports = class Users {
   updateUserInterests() {
     this.router.put('/users/:userId/interests', async (req, res) => {
       try {
-        const user = await User.findOne({
-          where: { id: req.params.userId }
-        });
+        const user = await User.findOne({ where: { id: req.params.userId } });
+        const token = await loggedUser(req);
 
-        const token = await loggedUser(req)
         if (user && token && user.id === token.id) {
           if (req.body.interests) {
             await user.setInterests(req.body.interests);
@@ -222,7 +218,7 @@ module.exports = class Users {
         }
         return res.status(404).json({
           errors: [{
-            detail: 'Didn’t find anything here!'
+            message: 'Didn’t find anything here!'
           }]
         });
       }
@@ -292,7 +288,7 @@ module.exports = class Users {
         }
         return res.status(404).json({
           errors: [{
-            detail: 'Didn’t find anything here!'
+            message: 'Didn’t find anything here!'
           }]
         });
       }     
@@ -354,7 +350,12 @@ module.exports = class Users {
   removeUser() {
     this.router.delete('/users/:userId', async (req, res) => {
       try {
-        if (await User.findOne({ where: { id: req.params.userId } })) {
+        const token = await loggedUser(req)
+        const user = await User.findOne({
+          where: { id: req.params.userId }
+        })
+
+        if (token && user && user.id === token.id) {
           if (await User.destroy({ where: { id: req.params.userId } })) {
             return res.status(201).json({
               message: 'User has been deleted.'
@@ -369,7 +370,8 @@ module.exports = class Users {
           });
         }
       }
-      catch (err){
+      catch (err) {
+        console.log(err)
         res.status(500).json({
           errors: [err]
         })
