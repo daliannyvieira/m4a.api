@@ -182,12 +182,18 @@ module.exports = class Users {
             data: UsersLong.format(update.dataValues)
           });
         }
-        return res.status(404).json({
-          message: 'User not found.'
-        });
+          return res.status(404).json({
+            errors: [{
+              detail: 'Didn’t find anything here!'
+            }]
+          });
+
       }
       catch (err) {
-        return res.status(500).json(err);
+        console.log(err)
+        res.status(500).json({
+          errors: [err]
+        })
       }
     });
   }
@@ -215,7 +221,9 @@ module.exports = class Users {
           }
         }
         return res.status(404).json({
-          message: 'User not found.'
+          errors: [{
+            detail: 'Didn’t find anything here!'
+          }]
         });
       }
       catch (err) {
@@ -270,7 +278,7 @@ module.exports = class Users {
             return initiative.dataValues.id == req.params.initiativeId
           })
           if (isOwner) {
-            return res.status(404).json({
+            return res.status(401).json({
               message: "Sorry, user is initiative's owner."
             });
           }
@@ -283,12 +291,16 @@ module.exports = class Users {
           }
         }
         return res.status(404).json({
-          message: 'User not found.'
+          errors: [{
+            detail: 'Didn’t find anything here!'
+          }]
         });
       }     
       catch (err) {
         console.log(err)
-        res.status(500).json(err)
+        res.status(500).json({
+          errors: [err]
+        })
       }
     });
   }
@@ -315,15 +327,26 @@ module.exports = class Users {
             }
           }
           else {
-            res.status(404).json({ message: 'file not found' })
+            res.status(404).json({
+              errors: [{
+                message: 'file not found'
+              }]
+            })
           }
         }
         else {
-          res.status(404).json({ message: 'user not found' })
+          res.status(404).json({
+            errors: [{
+              message: 'user not found'
+            }]
+          })
         }
       }
       catch (err) {
         console.log(err)
+        res.status(500).json({
+          errors: [err]
+        })
       }
     });
   }
@@ -341,13 +364,15 @@ module.exports = class Users {
         else {
           return res.status(404).json({
             errors: [{
-              detail: 'Didn’t find anything here!'
+              message: 'Didn’t find anything here!'
             }]
           });
         }
       }
       catch (err){
-        res.status(500).json({ message: 'something is broken' });
+        res.status(500).json({
+          errors: [err]
+        })
       }
     });
   }
@@ -380,7 +405,9 @@ module.exports = class Users {
       }
       catch (err) {
         console.log(err)
-        res.status(500).json(err)
+        res.status(500).json({
+          errors: [err]
+        })
       }
     });
   }
