@@ -3,6 +3,7 @@ const { Initiative, Interests, InitiativesImages } = require('../../domain/entit
 const { InitiativeRepository } = require('../../domain/repositories');
 const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { loggedUser } = require('../../domain/auth')
+
 const shortJson = require('../responses/initiatives-short.js');
 const longJson = require('../responses/initiatives-long.js');
 
@@ -181,7 +182,8 @@ module.exports = class Initiatives {
       catch (err){
         console.log(err)
         res.status(500).json({
-          message: 'something is broken'
+          message: 'something is broken',
+          err: err
         });
       }
     });

@@ -2,10 +2,12 @@
 const { User, Initiative, Interests, InitiativesImages } = require('../../domain/entities');
 const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { login } = require('../../domain/auth');
+const { loggedUser } = require('../../domain/auth');
+
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
+const InitiativesJson = require('../responses/user-initiatives');
 const UserRelationships = require('../responses/users-relationships');
-const { loggedUser } = require('../../domain/auth');
 
 module.exports = class Users {
   constructor(router) {
@@ -14,14 +16,16 @@ module.exports = class Users {
 
   expose() {
     this.findUsersList();
-    this.createUser();
     this.findUser();
-    this.updateUser();
-    this.deleteUser();
-    this.uploadAvatar();
-    this.updateUserInterests();
+    this.findUserAndInitiatives();
+    this.findUserAndInterests();
+    this.createUser();
     this.createMatch();
+    this.uploadAvatar();
+    this.updateUser();
+    this.updateUserInterests();
     this.removeMatch();
+    this.removeUser();
   }
 
   findUsersList() {
@@ -32,48 +36,12 @@ module.exports = class Users {
         })
       }
       catch (err) {
-        const error = { message: err.message }
+        console.log(err)
         const errors = err.errors && err.errors.map(err => ({
           message: err.message,
-          type: err.type,
-          field: err.path
+          type: err.type
         }))
-        res.status(500).json(errors || error)
-      }
-    });
-  }
-
-  createUser() {
-    this.router.post('/users', async (req, res) => {
-      try {
-        const user = await User.create(req.body)
-        const token = await login(req.body.email)
-        const data = UsersLong.format(user)
-        data.token = token;
-
-        if (req.body.interests) {
-          const interests = await user.setInterests(req.body.interests);
-          res.status(200).json({
-            data: data,
-            relationships: {
-              interests
-            }
-          })
-        }
-        else {
-          res.status(200).json({
-            data: data
-          })
-        }
-      }
-      catch (err) {
-        const error = { message: err.message }
-        const errors = err.errors && err.errors.map(err => ({
-          message: err.message,
-          type: err.type,
-          field: err.path
-        }))
-        res.status(500).json(errors || error)
+        res.status(500).json(errors)
       }
     });
   }
@@ -81,48 +49,118 @@ module.exports = class Users {
   findUser() {
     this.router.get('/users/:id', async (req, res) => {
       try {
-        const { include } = req.query;
-        
-        if (include === 'initiatives') {
-          const user = await User.findOne({
-            where: { id: req.params.id },
-            include: [
-              {
-                'model': Initiative, as: 'UserInitiatives',
-                include: [InitiativesImages]
-              },
-              {
-                'model': Initiative,
-                include: [InitiativesImages]
-              }
-            ]
-          })
-
-          if (user) {
-            return res.status(200).json({
-              data: UserRelationships.format(user)
-            });
-          }
-        }
-
         const user = await User.findOne({
-          where: { id: req.params.id },
-          include: [Interests]
+          where: { id: req.params.id }
         })
 
         if (user) {
           return res.status(200).json({
-            data: UserRelationships.format(user)
+            data: {
+              type: `User`,
+              id: user.id,
+              attributes: UsersLong.format(user)
+            }
           });
         }
 
-        return res.status(404).json({
-          message: 'Didn’t find anything here!'
-        });
+        else {
+          return res.status(404).json({
+            errors: [{
+              detail: 'Didn’t find anything here!'
+            }]
+          });
+        }
       }
       catch (err) {
         console.log(err)
-        res.status(500).json({ message: 'something is broken' })
+        res.status(500).json({
+          errors: [ err ]
+        })
+      }
+    });
+  }
+
+  findUserAndInterests() {
+    this.router.get('/users/:id/relationships/interests', async (req, res) => {
+      try {
+        const user = await User.findOne({
+          where: { id: req.params.id },
+          include: Interests
+        })
+
+        if (user) {
+          return res.status(200).json({
+            data: {
+              type: `User`,
+              id: user.id,
+              attributes: UsersLong.format(user),
+              relationships: {
+                interests: user.Interests && user.Interests.map(interest => ({
+                  id: interest.id,
+                  description: interest.description,
+                  type: interest.type,
+                }))
+              }
+            }
+          });
+        }
+        else {
+          return res.status(404).json({
+            errors: [{
+              detail: 'Didn’t find anything here!'
+            }]
+          });
+        }
+      }
+      catch (err) {
+        console.log(err)
+        res.status(500).json({
+          errors: [ err ]
+        })
+      }
+    });
+  }
+
+  findUserAndInitiatives() {
+    this.router.get('/users/:id/relationships/initiatives', async (req, res) => {
+      try {
+        const user = await User.findOne({
+          where: { id: req.params.id },
+          include: [
+            {
+              'model': Initiative, as: 'UserInitiatives',
+              include: [InitiativesImages]
+            },
+            {
+              'model': Initiative,
+              include: [InitiativesImages]
+            }
+          ]
+        })
+
+        if (user) {
+          return res.status(200).json({
+            data: {
+              type: `User`,
+              id: user.id,
+              attributes: UsersLong.format(user),
+              relationships: InitiativesJson.format(user)
+            }
+          });
+        }
+        else {
+          return res.status(404).json({
+            errors: [{
+              detail: 'Didn’t find anything here!'
+            }]
+          });
+        }
+      }
+      catch (err) {
+        console.log(err)
+        res.status(500).json({
+          errors: [ err ]
+        })
       }
     });
   }
@@ -186,23 +224,71 @@ module.exports = class Users {
     });
   }
 
-
-  deleteUser() {
-    this.router.delete('/users/:userId', async (req, res) => {
+  createUser() {
+    this.router.post('/users', async (req, res) => {
       try {
-        if (await User.findOne({ where: { id: req.params.userId } })) {
-          if (await User.destroy({ where: { id: req.params.userId } })) {
+        const user = await User.create(req.body)
+        const token = await login(req.body.email)
+        const data = UsersLong.format(user)
+        data.token = token;
+
+        if (req.body.interests) {
+          const interests = await user.setInterests(req.body.interests);
+          res.status(200).json({
+            data: data,
+            relationships: {
+              interests
+            }
+          })
+        }
+        else {
+          res.status(200).json({
+            data: data
+          })
+        }
+      }
+      catch (err) {
+        const errors = err.errors && err.errors.map(err => ({
+          message: err.message,
+          type: err.type,
+          field: err.path
+        }))
+        res.status(500).json(errors)
+      }
+    });
+  }
+
+  createMatch() {
+    this.router.post('/users/:userId/match/:initiativeId', async (req, res) => {
+      try {
+        const user = await User.findOne({
+          where: { id: req.params.userId },
+          include: [{'model': Initiative, as: 'UserInitiatives'}]
+        })
+        if (user && req.params.initiativeId) {
+          const isOwner = user.UserInitiatives.find((initiative) => {
+            return initiative.dataValues.id == req.params.initiativeId
+          })
+          if (isOwner) {
+            return res.status(404).json({
+              message: "Sorry, user is initiative's owner."
+            });
+          }
+          else {
+            await user.addInitiative(req.params.initiativeId);
+
             return res.status(201).json({
-              message: 'User has been deleted.'
+              message: 'Match was created with success.'
             });
           }
         }
         return res.status(404).json({
-          message: 'Didn’t find anything here!'
+          message: 'User not found.'
         });
-      }
-      catch (err){
-        res.status(500).json({ message: 'something is broken' });
+      }     
+      catch (err) {
+        console.log(err)
+        res.status(500).json(err)
       }
     });
   }
@@ -242,37 +328,26 @@ module.exports = class Users {
     });
   }
 
-  createMatch() {
-    this.router.post('/users/:userId/match/:initiativeId', async (req, res) => {
+  removeUser() {
+    this.router.delete('/users/:userId', async (req, res) => {
       try {
-        const user = await User.findOne({
-          where: { id: req.params.userId },
-          include: [{'model': Initiative, as: 'UserInitiatives'}]
-        })
-        if (user && req.params.initiativeId) {
-          const isOwner = user.UserInitiatives.find((initiative) => {
-            return initiative.dataValues.id == req.params.initiativeId
-          })
-          if (isOwner) {
-            return res.status(404).json({
-              message: "Sorry, user is initiative's owner."
-            });
-          }
-          else {
-            await user.addInitiative(req.params.initiativeId);
-
+        if (await User.findOne({ where: { id: req.params.userId } })) {
+          if (await User.destroy({ where: { id: req.params.userId } })) {
             return res.status(201).json({
-              message: 'Match was created with success.'
+              message: 'User has been deleted.'
             });
           }
         }
-        return res.status(404).json({
-          message: 'User not found.'
-        });
-      }     
-      catch (err) {
-        console.log(err)
-        res.status(500).json(err)
+        else {
+          return res.status(404).json({
+            errors: [{
+              detail: 'Didn’t find anything here!'
+            }]
+          });
+        }
+      }
+      catch (err){
+        res.status(500).json({ message: 'something is broken' });
       }
     });
   }

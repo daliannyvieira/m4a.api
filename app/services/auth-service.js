@@ -1,7 +1,7 @@
 'use strict';
 const { login, loggedUser } = require('../../domain/auth');
 const request = require('request-promise');
-const UserRelationships = require('../responses/users-relationships');
+const UserJson = require('../responses/users-long');
 
 module.exports = class Login {
   constructor(router) {
@@ -30,15 +30,22 @@ module.exports = class Login {
         const facebookData = await request(options);
         const token = await login(JSON.parse(facebookData).email);
         if (token) {
-          return res.status(201).json({ data: token })
+          return res.status(201).json({
+            data: token
+          })
         }
         return res.status(404).json({
-          message: 'Didn’t find anything here!'
+          errors: [{
+            message: 'Didn’t find anything here!'
+          }]
         })
       }
       catch (err) {
-        console.log('err', err)
-        res.status(500).json(err)
+        return res.status(500).json({
+          errors: [{
+            message: JSON.parse(err.error).error.message
+          }]
+        })
       }
     });
   }
@@ -62,16 +69,17 @@ module.exports = class Login {
           })
         }
         return res.status(404).json({
-          message: 'Didn’t find anything here!'
+          errors: [{
+            message: 'Didn’t find anything here!'
+          }]
         })
       }
       catch (err) {
-        if (JSON.parse(err.error).error === "invalid_token") {
-          return res.status(401).json({
-            message: 'Invalid token'
-          })
-        }
-        return res.status(500).json(err)
+        return res.status(500).json({
+          errors: [{
+            message: JSON.parse(err.error).error_description,
+          }]
+        })
       }
     });
   }
@@ -82,14 +90,24 @@ module.exports = class Login {
         const user = await loggedUser(req)
         if (user) {
           return res.status(200).json({
-            data: UserRelationships.format(user)
+            data: {
+              type: `User`,
+              id: user.id,
+              attributes: UserJson.format(user)
+            }
           });
         }
-        return res.status(401).end()
+        return res.status(401).json({
+          errors: [{
+            message: 'Invalid token'
+          }]
+        })
       }
       catch (err) {
         console.log(err)
-        return res.status(500).json(err)
+        return res.status(500).json({
+          errors: [ err ]
+        })
       }
     });
   }
