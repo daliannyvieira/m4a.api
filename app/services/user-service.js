@@ -7,7 +7,6 @@ const { loggedUser } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
 const InitiativesJson = require('../responses/user-initiatives');
-const UserRelationships = require('../responses/users-relationships');
 
 module.exports = class Users {
   constructor(router) {
@@ -382,11 +381,13 @@ module.exports = class Users {
   removeMatch() {
     this.router.delete('/users/:userId/match/:initiativeId', async (req, res) => {
       try {
+        const token = await loggedUser(req)
         const user = await User.findOne({
           where: { id: req.params.userId },
           include: [{'model': Initiative, as: 'UserInitiatives'}]
         })
-        if (user) {
+        if (token && user && user.id === token.id) {
+          console.log('user.id', user.id)
           const find = await user.removeInitiative(req.params.initiativeId)
           if (find === 1) {
             return res.status(200).json({
@@ -395,13 +396,17 @@ module.exports = class Users {
           }
           else {
             return res.status(404).json({
-              message: 'Match was not found.'
+              errors: [{
+                message: 'Didn’t find anything here!'
+              }]
             });
           }
         }
         else {
           return res.status(404).json({
-            message: 'User not found.'
+            errors: [{
+              message: 'Didn’t find anything here!'
+            }]
           });
         }
       }
