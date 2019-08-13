@@ -77,7 +77,6 @@ module.exports = class Users {
             }],
           });
         }
-
         return res.status(404).json({
           errors: [{
             message: 'Didn’t find anything here!',

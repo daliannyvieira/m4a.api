@@ -1,50 +1,77 @@
-"use strict"
-const Op = require('sequelize').Op;
+const { Op } = require('sequelize');
 
-const { Initiative, Interests, User, InitiativesImages } = require('../../domain/entities');
+const {
+  Initiative, Interests, InitiativesImages,
+} = require('../../domain/entities');
 
-const createQuery = ({ country, city, UserId, IdMatches }) => {
-
+const createQuery = ({
+  country, city, UserId, IdMatches,
+}) => {
   if (city) {
     return Initiative.findAll({
-      where: { city: city, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
-      include: [Interests, InitiativesImages]
-    })
+      where: {
+        city,
+        UserId: {
+          [Op.not]: UserId,
+        },
+        id: {
+          [Op.not]: IdMatches,
+        },
+      },
+      include: [Interests, InitiativesImages],
+    });
   }
 
   if (country) {
     return Initiative.findAll({
-      where: { country: country, UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
-      include: [Interests, InitiativesImages]
-    })
+      where: {
+        country,
+        UserId: {
+          [Op.not]: UserId,
+        },
+        id: {
+          [Op.not]: IdMatches,
+        },
+      },
+      include: [Interests, InitiativesImages],
+    });
   }
-
   return Initiative.findAll({
-    where: { UserId: {$ne: UserId}, id: {[Op.notIn]:IdMatches} },
-    include: [Interests, InitiativesImages]
-  })
-}
+    where: {
+      UserId: {
+        [Op.not]: UserId,
+      },
+      id: {
+        [Op.not]: IdMatches,
+      },
+    },
+  });
+};
 
-const searchNearestInitiatives = async ({ country, city, UserId, IdMatches }) => {
-  let search = null
+const searchNearestInitiatives = async ({
+  country, city, UserId, IdMatches,
+}) => {
+  let search = null;
 
   // Search initiatives by city
-  let result = await createQuery({ country, city, UserId, IdMatches})
+  let result = await createQuery({
+    country, city, UserId, IdMatches,
+  });
 
   // Search initiatives by country
   if (result.length < 10) {
-    search = 'country'
-    result = await createQuery({ country, UserId, IdMatches})
+    search = 'country';
+    result = await createQuery({ country, UserId, IdMatches });
   }
 
   // Search all initiatives
   if (result.length < 10 && search === 'country') {
-    search = 'all'
-    result = await createQuery({ UserId, IdMatches})
+    search = 'all';
+    result = await createQuery({ UserId, IdMatches });
   }
 
-  return result
-} 
+  return result;
+};
 
 module.exports = class InitiativeRepository {
   async findNearest(currentUser) {
@@ -52,8 +79,8 @@ module.exports = class InitiativeRepository {
       country: currentUser.country,
       city: currentUser.city,
       UserId: currentUser.id,
-      IdMatches: currentUser.Initiatives.map(item => item.id)
-    })
-    return result
+      IdMatches: currentUser.Initiatives.map((item) => item.id),
+    });
+    return result;
   }
-}
+};

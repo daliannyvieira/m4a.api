@@ -89,7 +89,7 @@ module.exports = class Initiatives {
         });
       } catch (err) {
         console.log('er', err);
-        res.status(500).json({
+        return res.status(500).json({
           errors: [err],
         });
       }
@@ -122,7 +122,7 @@ module.exports = class Initiatives {
         });
       } catch (err) {
         console.log(err);
-        res.status(500).json({
+        return res.status(500).json({
           errors: [err],
         });
       }
@@ -164,7 +164,7 @@ module.exports = class Initiatives {
           });
         }
       } catch (err) {
-        res.status(500).json({
+        return res.status(500).json({
           errors: [err],
         });
       }
@@ -188,7 +188,7 @@ module.exports = class Initiatives {
         });
       } catch (err) {
         console.log(err);
-        res.status(500).json({
+        return res.status(500).json({
           errors: [err],
         });
       }
