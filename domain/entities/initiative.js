@@ -4,30 +4,30 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       unique: {
-        msg: "name must be unique"
+        msg: 'name must be unique',
       },
       validate: {
         notEmpty: {
-          msg: "name can't be empty"
-        }
-      }
+          msg: "name can't be empty",
+        },
+      },
     },
     website: {
       type: DataTypes.STRING,
       validate: {
         notEmpty: {
-          msg: "website can't be empty"
+          msg: "website can't be empty",
         },
-      }
+      },
     },
     bio: {
       type: DataTypes.STRING,
       validate: {
         len: {
           args: [0, 100],
-          msg: "bio must have until 100 characters"
-        }
-      }
+          msg: 'bio must have until 100 characters',
+        },
+      },
     },
     birthday: DataTypes.DATE,
     avatar: DataTypes.STRING,
@@ -42,9 +42,9 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isIn: {
           args: [['on going', 'one time']],
-          msg: "eventType must be: 'on going' or 'one time'"
-        }
-      }
+          msg: "eventType must be: 'on going' or 'one time'",
+        },
+      },
     },
     start: DataTypes.DATE,
     finish: DataTypes.DATE,
@@ -53,23 +53,23 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       validate: {
         notEmpty: {
-          msg: "UserId can't be empty"
-        }
-      }
-    }
+          msg: "UserId can't be empty",
+        },
+      },
+    },
   });
 
-  Initiative.associate = models => {
+  Initiative.associate = (models) => {
     Initiative.belongsTo(models.User);
-    
+
     Initiative.hasMany(models.InitiativesImages, {
       foreignKey: 'InitiativeId',
     });
-    
-    Initiative.belongsToMany(models.Interests, {through: 'InitiativesInterests'})
 
-    Initiative.belongsToMany(models.User, {through: 'Matches'})
+    Initiative.belongsToMany(models.Interests, { through: 'InitiativesInterests' });
+
+    Initiative.belongsToMany(models.User, { through: 'Matches' });
   };
 
   return Initiative;
-}
+};

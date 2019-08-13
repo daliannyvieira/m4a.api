@@ -1,6 +1,5 @@
-'use strict';
-const { login, loggedUser } = require('../../domain/auth');
 const request = require('request-promise');
+const { login, loggedUser } = require('../../domain/auth');
 const UserJson = require('../responses/users-long');
 
 module.exports = class Login {
@@ -18,34 +17,33 @@ module.exports = class Login {
     this.router.post('/login/facebook', async (req, res) => {
       try {
         const { user_access_token } = req.body;
-        const fields = "email,name,picture.width(500).height(500)";
+        const fields = 'email,name,picture.width(500).height(500)';
         const options = {
           method: 'GET',
-          uri: `https://graph.facebook.com/v2.8/me`,
+          uri: 'https://graph.facebook.com/v2.8/me',
           qs: {
             access_token: user_access_token,
-            fields: fields
-          }
+            fields,
+          },
         };
         const facebookData = await request(options);
         const token = await login(JSON.parse(facebookData).email);
         if (token) {
           return res.status(201).json({
-            data: token
-          })
+            data: token,
+          });
         }
         return res.status(404).json({
           errors: [{
-            message: 'Didn’t find anything here!'
-          }]
-        })
-      }
-      catch (err) {
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
         return res.status(500).json({
           errors: [{
-            message: JSON.parse(err.error).error.message
-          }]
-        })
+            message: JSON.parse(err.error).error.message,
+          }],
+        });
       }
     });
   }
@@ -56,30 +54,29 @@ module.exports = class Login {
         const { user_access_token } = req.body;
         const options = {
           method: 'GET',
-          uri: `https://www.googleapis.com/oauth2/v1/tokeninfo`,
+          uri: 'https://www.googleapis.com/oauth2/v1/tokeninfo',
           qs: {
             access_token: user_access_token,
-          }
+          },
         };
         const googleData = await request(options);
         const token = await login(JSON.parse(googleData).email);
         if (token) {
           return res.status(201).json({
-            data: token
-          })
+            data: token,
+          });
         }
         return res.status(404).json({
           errors: [{
-            message: 'Didn’t find anything here!'
-          }]
-        })
-      }
-      catch (err) {
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
         return res.status(500).json({
           errors: [{
             message: JSON.parse(err.error).error_description,
-          }]
-        })
+          }],
+        });
       }
     });
   }
@@ -87,29 +84,27 @@ module.exports = class Login {
   verifyToken() {
     this.router.get('/login/verify', async (req, res) => {
       try {
-        const user = await loggedUser(req)
+        const user = await loggedUser(req);
         if (user) {
           return res.status(200).json({
             data: {
-              type: `User`,
+              type: 'User',
               id: user.id,
-              attributes: UserJson.format(user)
-            }
+              attributes: UserJson.format(user),
+            },
           });
         }
         return res.status(401).json({
           errors: [{
-            message: 'Invalid token'
-          }]
-        })
-      }
-      catch (err) {
-        console.log(err)
+            message: 'Invalid token',
+          }],
+        });
+      } catch (err) {
+        console.log(err);
         return res.status(500).json({
-          errors: [ err ]
-        })
+          errors: [err],
+        });
       }
     });
   }
-
 };

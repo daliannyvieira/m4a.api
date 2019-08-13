@@ -1,9 +1,7 @@
-'use strict';
 const { Initiative, Interests, InitiativesImages } = require('../../domain/entities');
 const { InitiativeRepository } = require('../../domain/repositories');
 const { uploadImage, multer } = require('../../domain/firebaseStorage');
-const { loggedUser } = require('../../domain/auth')
-
+const { loggedUser } = require('../../domain/auth');
 const shortJson = require('../responses/initiatives-short.js');
 const longJson = require('../responses/initiatives-long.js');
 
@@ -23,38 +21,36 @@ module.exports = class Initiatives {
   createInitiative() {
     this.router.post('/initiatives', async (req, res) => {
       try {
-        const initiative = await Initiative.create(req.body)
-        
+        const initiative = await Initiative.create(req.body);
+
         if (req.body.interests) {
-          const interests = await initiative.setInterests(req.body.interests);
+          await initiative.setInterests(req.body.interests);
           return res.status(201).json({
             data: {
-              type: `Initiative`,
+              type: 'Initiative',
               id: initiative.id,
               attributes: longJson.format(initiative),
-              relationships: longJson.format(initiative)
-            }
-          })
+              relationships: longJson.format(initiative),
+            },
+          });
         }
 
         res.status(201).json({
           data: {
-            type: `Initiative`,
+            type: 'Initiative',
             id: initiative.id,
-            attributes: longJson.format(initiative)
-          }
-        })
-      }
-
-      catch (err) {
-        const errors = err.errors && err.errors.map(err => ({
-          message: err.message,
-          type: err.type,
-          field: err.path
-        }))
+            attributes: longJson.format(initiative),
+          },
+        });
+      } catch (err) {
+        const errors = err.errors && err.errors.map((error) => ({
+          message: error.message,
+          type: error.type,
+          field: error.path,
+        }));
         res.status(500).json([{
-          message: err.name || errors
-        }])
+          message: err.name || errors,
+        }]);
       }
     });
   }
@@ -62,36 +58,35 @@ module.exports = class Initiatives {
   findInitiative() {
     this.router.get('/initiatives/:initiativeId', async (req, res) => {
       try {
-        const user = await loggedUser(req)
+        const user = await loggedUser(req);
 
         const initiative = await Initiative.findOne({
           where: { id: req.params.initiativeId },
-          include: [Interests, InitiativesImages]
-        })
+          include: [Interests, InitiativesImages],
+        });
 
         if (initiative) {
-          const data = initiative
-          data.Matches = user.Initiatives
+          const data = initiative;
+          data.Matches = user.Initiatives;
 
           return res.status(200).json({
             data: {
-              type: `Initiative`,
+              type: 'Initiative',
               id: data.id,
-              attributes: longJson.format(data)
-            }
-          })
+              attributes: longJson.format(data),
+            },
+          });
         }
 
         return res.status(404).json({
           errors: [{
-            message: 'Didn’t find anything here!'
-          }]
+            message: 'Didn’t find anything here!',
+          }],
         });
-      }
-      catch (err) {
-        console.log('er',err)
+      } catch (err) {
+        console.log('er', err);
         res.status(500).json({
-          errors: [err]
+          errors: [err],
         });
       }
     });
@@ -101,39 +96,30 @@ module.exports = class Initiatives {
     this.router.get('/initiatives', async (req, res) => {
       try {
         if (req.query.nearest) {
-          const user = await loggedUser(req)
+          const user = await loggedUser(req);
 
           if (user) {
-            const result = await InitiativeRepository.findNearest(user)
+            const result = await InitiativeRepository.findNearest(user);
             return res.status(200).json({
-              data: result.map(initiative => {
-                return shortJson.format(initiative)
-              })
-            })
+              data: result.map((initiative) => shortJson.format(initiative)),
+            });
           }
-          else {
-            return res.status(500).json({
-              data: 'something is broken'
-            })
-          }
+          return res.status(500).json({
+            data: 'something is broken',
+          });
         }
 
-        else {
-          const initiatives = await Initiative.findAll({
-            include: [Interests, InitiativesImages]
-          })
+        const initiatives = await Initiative.findAll({
+          include: [Interests, InitiativesImages],
+        });
 
-          return res.status(200).json({
-            data: initiatives.map(initiative => {
-              return shortJson.format(initiative)
-            })
-          })
-        }
-      }
-      catch (err) {
-        console.log(err)
+        return res.status(200).json({
+          data: initiatives.map((initiative) => shortJson.format(initiative)),
+        });
+      } catch (err) {
+        console.log(err);
         res.status(500).json({
-          errors: [err]
+          errors: [err],
         });
       }
     });
@@ -143,68 +129,63 @@ module.exports = class Initiatives {
     this.router.post('/initiatives/uploadphotos/:initiativeId', multer.array('image', 5), async (req, res) => {
       try {
         const find = await Initiative.findOne({
-          where: { id: req.params.initiativeId }
-        })
+          where: { id: req.params.initiativeId },
+        });
 
         if (find) {
           const saveFirebase = await Promise.all(
-            req.files.map(item => uploadImage(item, find.name))
-          )
+            req.files.map((item) => uploadImage(item, find.name)),
+          );
           if (saveFirebase) {
             const saveMySQL = await Promise.all(
-              saveFirebase.map(item => {
+              saveFirebase.map((item) => {
                 InitiativesImages.create({
                   InitiativeId: req.params.initiativeId,
-                  image: item
-                })
-              })
-            )
+                  image: item,
+                });
+              }),
+            );
 
             if (saveMySQL) {
               return res.status(200).json({
-                data: saveFirebase
-              })
+                data: saveFirebase,
+              });
             }
           }
-        }
-
-        else {
+        } else {
           return res.status(404).json({
             errors: [{
-              message: 'Didn’t find anything here!'
-            }]
+              message: 'Didn’t find anything here!',
+            }],
           });
         }
-
-      }
-      catch (err) {
+      } catch (err) {
         res.status(500).json({
-          errors: [err]
+          errors: [err],
         });
       }
-    })
+    });
   }
 
   deleteInitiative() {
     this.router.delete('/initiatives/:initiativeId', async (req, res) => {
       try {
-        if (await Initiative.findOne({where: { id: req.params.initiativeId } })) {
+        if (await Initiative.findOne({ where: { id: req.params.initiativeId } })) {
           if (await Initiative.destroy({ where: { id: req.params.initiativeId } })) {
             return res.status(200).json({
-              message: 'Initiative has been deleted.'
+              message: 'Initiative has been deleted.',
             });
           }
         }
         return res.status(404).json({
           errors: [{
-            message: 'Didn’t find anything here!'
-          }]
+            message: 'Didn’t find anything here!',
+          }],
         });
-      }
-      catch (err){
-        console.log(err)
+      } catch (err) {
+        console.log(err);
         res.status(500).json({
-          errors: [err]
+          errors: [err],
         });
       }
     });

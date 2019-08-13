@@ -1,14 +1,11 @@
-const fs = require('fs')
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.js')[env];
 const Multer = require('multer');
-const admin = require("firebase-admin");
+const admin = require('firebase-admin');
 
-let storageBucket = "match4action-9e993.appspot.com"
+const storageBucket = 'match4action-9e993.appspot.com';
 
 admin.initializeApp({
   storageBucket,
-  credential: admin.credential.cert('./infra/firebase-adminsdk.json')
+  credential: admin.credential.cert('./infra/firebase-adminsdk.json'),
 });
 
 const bucket = admin.storage().bucket();
@@ -16,39 +13,39 @@ const bucket = admin.storage().bucket();
 const multer = Multer({
   storage: Multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024
-  }
+    fileSize: 5 * 1024 * 1024,
+  },
 });
 
 const uploadImage = async (file, fileName) => {
-  let prom = new Promise((resolve, reject) => {
+  const prom = new Promise((resolve, reject) => {
     if (!file) {
       reject('No image file');
     }
 
-    let newFileName = `${fileName}_${Date.now()}`;
+    const newFileName = `${fileName}_${Date.now()}`;
 
-    let fileUpload = bucket.file(newFileName);
+    const fileUpload = bucket.file(newFileName);
 
     const blobStream = fileUpload.createWriteStream({
       metadata: {
-        contentType: file.mimetype
+        contentType: file.mimetype,
       },
-      predefinedAcl: "publicRead"
+      predefinedAcl: 'publicRead',
     });
 
-    blobStream.on('error', (error) => {
+    blobStream.on('error', () => {
       reject('Something is wrong! Unable to upload at the moment.');
     });
 
     blobStream.on('finish', () => {
-      const url = `https://${storageBucket}.storage.googleapis.com/${newFileName}`
+      const url = `https://${storageBucket}.storage.googleapis.com/${newFileName}`;
       resolve(url);
     });
 
     blobStream.end(file.buffer);
   });
   return prom;
-}
+};
 
 module.exports = { uploadImage, multer };

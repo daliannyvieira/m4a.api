@@ -1,4 +1,3 @@
-'use strict';
 const express = require('express');
 const bodyParser = require('body-parser');
 const { requiresAuth, routerList } = require('./domain/auth');
@@ -12,17 +11,17 @@ const Login = require('./app/services/auth-service');
 const port = 3000;
 
 class Server {
-  constructor () {
+  constructor() {
     this.app = express();
     this.router = express.Router();
   }
 
-  setup () {
+  setup() {
     this.app.use((req, res, next) => {
-      res.header("Access-Control-Allow-Origin", "*");
+      res.header('Access-Control-Allow-Origin', '*');
       res.header(
-        "Access-Control-Allow-Headers",
-        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization',
       );
       if (req.method === 'OPTIONS') {
         res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
@@ -32,11 +31,11 @@ class Server {
     });
     this.app.enable('trust proxy');
     this.app.use(bodyParser.json());
-    this.app.use(bodyParser.urlencoded({extended: true}));
+    this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(requiresAuth(routerList));
   }
 
-  start () {
+  start() {
     new StatusService(this.router).expose();
     new UserService(this.router).expose();
     new InitiativeService(this.router).expose();

@@ -5,33 +5,33 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       validate: {
         notEmpty: {
-          msg: "name can't be empty"
-        }
-      }
+          msg: "name can't be empty",
+        },
+      },
     },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: {
-        msg: "email must be unique"
+        msg: 'email must be unique',
       },
       validate: {
         notEmpty: {
-          msg: "email can't be empty"
+          msg: "email can't be empty",
         },
         isEmail: {
-          msg: "email must be an email"
+          msg: 'email must be an email',
         },
-      }
+      },
     },
     bio: {
       type: DataTypes.STRING,
       validate: {
         len: {
           args: [0, 100],
-          msg: "bio must have until 100 characters"
-        }
-      }
+          msg: 'bio must have until 100 characters',
+        },
+      },
     },
     birthday: DataTypes.DATE,
     avatar: DataTypes.STRING,
@@ -48,9 +48,9 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isIn: {
           args: [['Organization', 'Volunteer']],
-          msg: "userProfile must be an Organization or a Volunteer using lowercase"
-        }
-      }
+          msg: 'userProfile must be an Organization or a Volunteer using lowercase',
+        },
+      },
     },
     userStatus: {
       type: DataTypes.INTEGER,
@@ -58,19 +58,18 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isIn: {
           args: [[0, 1]],
-          msg: "userStatus must be 0 or 1"
-        }
-      }
+          msg: 'userStatus must be 0 or 1',
+        },
+      },
     },
   });
 
-  User.associate = models => {
+  User.associate = (models) => {
+    User.hasMany(models.Initiative, { foreignKey: 'UserId', as: 'UserInitiatives' });
 
-    User.hasMany(models.Initiative, { foreignKey: 'UserId', as: 'UserInitiatives'} )
+    User.belongsToMany(models.Interests, { through: 'UsersInterests' });
 
-    User.belongsToMany(models.Interests, {through: 'UsersInterests'})
-
-    User.belongsToMany(models.Initiative, {through: 'Matches'})
-  }
+    User.belongsToMany(models.Initiative, { through: 'Matches' });
+  };
   return User;
-}
+};
