@@ -19,7 +19,9 @@ module.exports = class Initiatives {
           data: await Interests.findAll(),
         });
       } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({
+          errors: [err],
+        });
       }
     });
   }
@@ -33,7 +35,9 @@ module.exports = class Initiatives {
           }),
         });
       } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({
+          errors: [err],
+        });
       }
     });
   }

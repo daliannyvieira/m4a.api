@@ -16,13 +16,13 @@ module.exports = class Login {
   validateFacebook() {
     this.router.post('/login/facebook', async (req, res) => {
       try {
-        const { user_access_token } = req.body;
+        const UserAccessToken = req.body.user_access_token;
         const fields = 'email,name,picture.width(500).height(500)';
         const options = {
           method: 'GET',
           uri: 'https://graph.facebook.com/v2.8/me',
           qs: {
-            access_token: user_access_token,
+            access_token: UserAccessToken,
             fields,
           },
         };
@@ -51,12 +51,12 @@ module.exports = class Login {
   validateGoogle() {
     this.router.post('/login/google', async (req, res) => {
       try {
-        const { user_access_token } = req.body;
+        const UserAccessToken = req.body.user_access_token;
         const options = {
           method: 'GET',
           uri: 'https://www.googleapis.com/oauth2/v1/tokeninfo',
           qs: {
-            access_token: user_access_token,
+            access_token: UserAccessToken,
           },
         };
         const googleData = await request(options);
