@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "development": "nodemon index.js",
+    "development": "NODE_ENV=localhost nodemon index.js",
     "start": "node index.js",
-    "watch": "nodemon index.js"
+    "watch": "NODE_ENV=localhost nodemon index.js"
   },
   "author": "",
   "license": "ISC",
