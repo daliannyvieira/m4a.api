@@ -32,7 +32,7 @@ module.exports = class Users {
           const match = await Matches.create({
             InitiativeId: req.params.initiativeId,
             UserId: req.params.userId,
-            liked: 1,
+            liked: req.body.liked,
           });
           return res.status(200).json({
             data: {

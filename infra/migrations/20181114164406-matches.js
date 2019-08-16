@@ -1,4 +1,3 @@
-'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('Matches', {
@@ -12,13 +11,16 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'Initiatives', key: 'id' },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE',
       },
       UserId: {
         type: Sequelize.INTEGER,
         references: { model: 'Users', key: 'id' },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE',
+      },
+      liked: {
+        type: Sequelize.BOOLEAN,
       },
       createdAt: {
         type: Sequelize.DATE,

@@ -125,6 +125,9 @@ module.exports = class Users {
             },
             {
               model: Initiative,
+              where: {
+                liked: 1
+              },
               include: [InitiativesImages],
             },
           ],
