@@ -91,6 +91,13 @@ module.exports = class Login {
               type: 'User',
               id: user.id,
               attributes: UserJson.format(user),
+              relationships: {
+                interests: user.Interests && user.Interests.map((interest) => ({
+                  id: interest.id,
+                  description: interest.description,
+                  type: interest.type,
+                })),
+              },
             },
           });
         }
