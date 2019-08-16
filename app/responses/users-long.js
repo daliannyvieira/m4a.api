@@ -14,7 +14,7 @@ const UsersLong = {
       country: user.country,
       allowToRemote: user.allowToRemote,
       userStatus: user.userStatus,
-      userProfile: user.userProfile
+      userProfile: user.userProfile,
     }
   }
 }

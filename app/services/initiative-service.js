@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const { Initiative, Interests, InitiativesImages } = require('../../domain/entities');
 const { InitiativeRepository } = require('../../domain/repositories');
 const { uploadImage, multer } = require('../../domain/firebaseStorage');
@@ -99,11 +100,28 @@ module.exports = class Initiatives {
   findInitiativesList() {
     this.router.get('/initiatives', async (req, res) => {
       try {
-        if (req.query.nearest) {
-          const user = await loggedUser(req);
+        const user = await loggedUser(req);
+        if (user) {
+          const IdMatches = user.Initiatives.map((item) => item.id);
+          const initiatives = await Initiative.findAll({
+            where: {
+              UserId: {
+                [Op.not]: user.id,
+              },
+              id: {
+                [Op.not]: IdMatches,
+              },
+            },
+            include: [Interests, InitiativesImages],
+          });
+          return res.status(200).json({
+            data: initiatives.map((initiative) => shortJson.format(initiative)),
+          });
+        }
+        if (req.query.nearest && user) {
+          const result = await InitiativeRepository.findNearest(user);
 
-          if (user) {
-            const result = await InitiativeRepository.findNearest(user);
+          if (result) {
             return res.status(200).json({
               data: result.map((initiative) => shortJson.format(initiative)),
             });
@@ -112,14 +130,6 @@ module.exports = class Initiatives {
             data: 'something is broken',
           });
         }
-
-        const initiatives = await Initiative.findAll({
-          include: [Interests, InitiativesImages],
-        });
-
-        return res.status(200).json({
-          data: initiatives.map((initiative) => shortJson.format(initiative)),
-        });
       } catch (err) {
         console.log(err);
         return res.status(500).json({
