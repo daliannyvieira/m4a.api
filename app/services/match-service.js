@@ -1,5 +1,5 @@
 const {
-  User, Initiative,
+  User, Initiative, Matches,
 } = require('../../domain/entities');
 const { loggedUser } = require('../../domain/auth');
 
@@ -20,7 +20,6 @@ module.exports = class Users {
           where: { id: req.params.userId },
           include: [{ model: Initiative, as: 'UserInitiatives' }],
         });
-
         if (user && req.params.initiativeId) {
           const isOwner = user.UserInitiatives.find((initiative) => initiative.dataValues.id == req.params.initiativeId);
           if (isOwner) {
@@ -30,15 +29,15 @@ module.exports = class Users {
               }],
             });
           }
-          const match = await user.addInitiative(req.params.initiativeId);
-
+          const match = await Matches.create({
+            InitiativeId: req.params.initiativeId,
+            UserId: req.params.userId,
+            liked: 1,
+          });
           return res.status(200).json({
             data: {
               type: 'Match',
-              attributes: match.map((ids) => ({
-                initiativeId: ids.InitiativeId,
-                userId: ids.UserId,
-              })),
+              attributes: match,
             },
           });
         }
