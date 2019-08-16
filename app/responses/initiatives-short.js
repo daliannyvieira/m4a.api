@@ -13,17 +13,17 @@ const shortJson = {
       country: initiative.country,
       city: initiative.city,
       userId: initiative.UserId,
-      relationships: {
-        interests: initiative.Interests && initiative.Interests.map((interest) => ({
-          id: interest.id,
-          description: interest.description,
-          type: interest.type,
-        })),
-        images: initiative.InitiativesImages && initiative.InitiativesImages.map((img) => ({
-          id: img.id,
-          image: img.image,
-        })),
-      },
+    },
+    relationships: {
+      interests: initiative.Interests && initiative.Interests.map((interest) => ({
+        id: interest.id,
+        description: interest.description,
+        type: interest.type,
+      })),
+      images: initiative.InitiativesImages && initiative.InitiativesImages.map((img) => ({
+        id: img.id,
+        image: img.image,
+      })),
     },
   }),
 };

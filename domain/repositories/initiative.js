@@ -21,7 +21,6 @@ const createQuery = ({
       include: [Interests, InitiativesImages],
     });
   }
-
   if (country) {
     return Initiative.findAll({
       where: {
@@ -45,6 +44,7 @@ const createQuery = ({
         [Op.not]: IdMatches,
       },
     },
+    include: [Interests, InitiativesImages],
   });
 };
 
