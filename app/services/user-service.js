@@ -1,5 +1,6 @@
+const { Op } = require('sequelize');
 const {
-  User, Initiative, Interests, InitiativesImages,
+  User, Initiative, Matches, Interests, InitiativesImages,
 } = require('../../domain/entities');
 const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { login } = require('../../domain/auth');
@@ -115,31 +116,61 @@ module.exports = class Users {
   findUserAndInitiatives() {
     this.router.get('/users/:id/relationships/initiatives', async (req, res) => {
       try {
-        const user = await User.findOne({
-          where: { id: req.params.id },
+        // queria fazer assim 
+        // const matches = await User.findOne({
+        //   where: {
+        //     id: req.params.id,
+        //   },
+        //   include: [
+        //     {
+        //       model: Initiative,
+        //       where: {
+        //         liked: true,
+        //       },
+        //       include: [InitiativesImages],
+        //     },
+        //     {
+        //       model: Initiative,
+        //       as: 'UserInitiatives',
+        //       include: [InitiativesImages],
+        //     },
+        //   ],
+        // });
+
+        // mas só consegui assim :(
+        const matches = await Matches.findAll({
+          where: {
+            UserId: req.params.id,
+            liked: true,
+          },
           include: [
             {
               model: Initiative,
-              as: 'UserInitiatives',
               include: [InitiativesImages],
             },
             {
-              model: Initiative,
-              where: {
-                liked: 1
-              },
-              include: [InitiativesImages],
+              model: User,
+              include: [
+                {
+                  model: Initiative,
+                  as: 'UserInitiatives',
+                  include: [InitiativesImages],
+                },
+              ],
             },
           ],
         });
 
-        if (user) {
+        if (matches) {
           return res.status(200).json({
             data: {
               type: 'User',
-              id: user.id,
-              attributes: UsersLong.format(user),
-              relationships: InitiativesJson.format(user),
+              id: matches[0].User.id,
+              attributes: UsersLong.format(matches[0].User),
+              relationships: {
+                userInitiatives: matches[0].User.UserInitiatives,
+                matches: matches[0].Initiative,
+              },
             },
           });
         }

@@ -14,5 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
 
+  Matches.associate = (models) => {
+    Matches.belongsTo(models.Initiative);
+    Matches.belongsTo(models.User);
+  };
+
   return Matches;
 };
