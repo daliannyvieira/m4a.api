@@ -74,12 +74,12 @@ const searchNearestInitiatives = async ({
 };
 
 module.exports = class InitiativeRepository {
-  async findNearest(currentUser) {
+  async findNearest(currentUser, IdMatches) {
     const result = await searchNearestInitiatives({
       country: currentUser.country,
       city: currentUser.city,
       UserId: currentUser.id,
-      IdMatches: currentUser.Initiatives.map((item) => item.id),
+      IdMatches: IdMatches,
     });
     return result;
   }

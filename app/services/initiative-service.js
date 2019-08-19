@@ -1,5 +1,7 @@
 const { Op } = require('sequelize');
-const { Initiative, Interests, InitiativesImages } = require('../../domain/entities');
+const {
+  Initiative, Interests, InitiativesImages, Matches,
+} = require('../../domain/entities');
 const { InitiativeRepository } = require('../../domain/repositories');
 const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { loggedUser } = require('../../domain/auth');
@@ -102,7 +104,10 @@ module.exports = class Initiatives {
       try {
         const user = await loggedUser(req);
         if (user) {
-          const IdMatches = user.Initiatives.map((item) => item.id);
+          const MatchesList = await Matches.findAll({
+            where: { UserId: user.id },
+          });
+          const IdMatches = MatchesList.map((item) => item.InitiativeId);
           const initiatives = await Initiative.findAll({
             where: {
               UserId: {
@@ -114,20 +119,20 @@ module.exports = class Initiatives {
             },
             include: [Interests, InitiativesImages],
           });
-          return res.status(200).json({
-            data: initiatives.map((initiative) => shortJson.format(initiative)),
-          });
-        }
-        if (req.query.nearest && user) {
-          const result = await InitiativeRepository.findNearest(user);
-
-          if (result) {
-            return res.status(200).json({
-              data: result.map((initiative) => shortJson.format(initiative)),
+          if (req.query.nearest) {
+            const result = await InitiativeRepository.findNearest(user, IdMatches);
+  
+            if (result) {
+              return res.status(200).json({
+                data: result.map((initiative) => shortJson.format(initiative)),
+              });
+            }
+            return res.status(500).json({
+              data: 'something is broken',
             });
           }
-          return res.status(500).json({
-            data: 'something is broken',
+          return res.status(200).json({
+            data: initiatives.map((initiative) => shortJson.format(initiative)),
           });
         }
       } catch (err) {

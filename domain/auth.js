@@ -27,7 +27,7 @@ const loggedUser = async (req) => {
 
     return await User.findOne({
       where: { email: info.email },
-      include: [Interests, { model: Initiative, as: 'UserInitiatives' }, Initiative],
+      include: [Interests],
     });
   } catch (err) {
     return undefined;
@@ -61,7 +61,7 @@ const routerList = [
     methods: ['GET'],
   },
   {
-    path: '/users',
+    path: '/user',
     methods: ['POST'],
   },
   {
