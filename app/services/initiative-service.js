@@ -2,8 +2,9 @@ const { Op } = require('sequelize');
 const {
   Initiative, Interests, InitiativesImages, Matches,
 } = require('../../domain/entities');
+const { uploadImage } = require('../../infra/cloud-storage');
+const { multer } = require('../../infra/helpers');
 const { InitiativeRepository } = require('../../domain/repositories');
-const { uploadImage, multer } = require('../../domain/firebaseStorage');
 const { loggedUser } = require('../../domain/auth');
 const shortJson = require('../responses/initiatives-short.js');
 const longJson = require('../responses/initiatives-long.js');

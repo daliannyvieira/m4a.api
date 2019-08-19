@@ -1,14 +1,13 @@
-const { Op } = require('sequelize');
 const {
   User, Initiative, Matches, Interests, InitiativesImages,
 } = require('../../domain/entities');
-const { uploadImage, multer } = require('../../domain/firebaseStorage');
+const { uploadImage } = require('../../infra/cloud-storage');
+const { multer } = require('../../infra/helpers');
 const { login } = require('../../domain/auth');
 const { loggedUser } = require('../../domain/auth');
 
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
-const InitiativesJson = require('../responses/user-initiatives');
 
 module.exports = class Users {
   constructor(router) {
@@ -213,11 +212,11 @@ module.exports = class Users {
           const { file } = req;
 
           if (file) {
-            const firebase = await uploadImage(file, username);
+            const image = await uploadImage(file, username);
 
-            if (firebase) {
+            if (image) {
               const data = await user.update(
-                { avatar: firebase }, { where: { id: user.id } },
+                { avatar: image }, { where: { id: user.id } },
               );
               res.status(200).json({
                 data: {

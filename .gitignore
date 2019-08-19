@@ -6,7 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # config
-infra/firebase-adminsdk.json
+firebase-adminsdk.json
 # now.json
 
 # Runtime data
