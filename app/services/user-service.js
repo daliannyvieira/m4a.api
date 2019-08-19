@@ -126,7 +126,9 @@ module.exports = class Users {
           message: 'User not found.',
         });
       } catch (err) {
-        return res.status(500).json(err);
+        return res.status(500).json({
+          errors: [err],
+        });
       }
     });
   }
