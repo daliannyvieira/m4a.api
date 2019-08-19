@@ -23,7 +23,7 @@ module.exports = class Initiatives {
   }
 
   createInitiative() {
-    this.router.post('/initiatives', async (req, res) => {
+    this.router.post('/initiative', async (req, res) => {
       try {
         const initiative = await Initiative.create(req.body);
 
@@ -64,7 +64,7 @@ module.exports = class Initiatives {
   }
 
   findInitiative() {
-    this.router.get('/initiatives/:initiativeId', async (req, res) => {
+    this.router.get('/initiative/:initiativeId', async (req, res) => {
       try {
         const user = await loggedUser(req);
 
@@ -146,7 +146,7 @@ module.exports = class Initiatives {
   }
 
   uploadPhotos() {
-    this.router.post('/initiatives/uploadphotos/:initiativeId', multer.array('image', 5), async (req, res) => {
+    this.router.post('/initiative/photos/:initiativeId', multer.array('image', 5), async (req, res) => {
       try {
         const find = await Initiative.findOne({
           where: { id: req.params.initiativeId },
@@ -188,7 +188,7 @@ module.exports = class Initiatives {
   }
 
   deleteInitiative() {
-    this.router.delete('/initiatives/:initiativeId', async (req, res) => {
+    this.router.delete('/initiative/:initiativeId', async (req, res) => {
       try {
         if (await Initiative.findOne({ where: { id: req.params.initiativeId } })) {
           if (await Initiative.destroy({ where: { id: req.params.initiativeId } })) {
