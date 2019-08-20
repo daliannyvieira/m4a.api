@@ -5,7 +5,6 @@ const { uploadImage } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
 const { login } = require('../../domain/auth');
 const { loggedUser } = require('../../domain/auth');
-
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
 
@@ -62,6 +61,18 @@ module.exports = class Users {
   findUserAndInitiatives() {
     this.router.get('/user/:id/initiatives', async (req, res) => {
       try {
+        const user = await User.findOne({
+          where: {
+            id: req.params.id,
+          },
+          include: [
+            {
+              model: Initiative,
+              as: 'UserInitiatives',
+              include: [InitiativesImages],
+            },
+          ],
+        });
         const matches = await Matches.findAll({
           where: {
             UserId: req.params.id,
@@ -72,27 +83,17 @@ module.exports = class Users {
               model: Initiative,
               include: [InitiativesImages],
             },
-            {
-              model: User,
-              include: [
-                {
-                  model: Initiative,
-                  as: 'UserInitiatives',
-                  include: [InitiativesImages],
-                },
-              ],
-            },
           ],
         });
-        if (matches) {
+        if (user) {
           return res.status(200).json({
             data: {
               type: 'User',
-              id: matches[0].User.id,
-              attributes: UsersLong.format(matches[0].User),
+              id: user.id,
+              attributes: UsersLong.format(user),
               relationships: {
-                userInitiatives: matches[0].User.UserInitiatives,
-                matches: matches[0].Initiative,
+                userInitiatives: user.UserInitiatives,
+                matches: matches.map((item) => item.Initiative),
               },
             },
           });
@@ -169,12 +170,10 @@ module.exports = class Users {
       try {
         const user = await User.create(req.body);
         const token = await login(req.body.email);
-        const data = UsersLong.format(user);
-        data.token = token;
 
         if (req.body.interests) {
           const interests = await user.setInterests(req.body.interests);
-          res.status(200).json({
+          res.status(201).json({
             data: {
               type: 'User',
               id: user.id,
@@ -182,14 +181,16 @@ module.exports = class Users {
               relationships: {
                 interests,
               },
+              token,
             },
           });
         } else {
-          res.status(200).json({
+          res.status(201).json({
             data: {
               type: 'User',
               id: user.id,
               attributes: UsersLong.format(user),
+              token,
             },
           });
         }
