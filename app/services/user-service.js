@@ -168,18 +168,26 @@ module.exports = class Users {
   createUser() {
     this.router.post('/user', async (req, res) => {
       try {
-        const user = await User.create(req.body);
+        const newUser = await User.create(req.body);
         const token = await login(req.body.email);
 
         if (req.body.interests) {
-          const interests = await user.setInterests(req.body.interests);
+          await newUser.setInterests(req.body.interests);
+          const user = await User.findOne({
+            where: { email: req.body.email },
+            include: [Interests],
+          });
           res.status(201).json({
             data: {
               type: 'User',
               id: user.id,
               attributes: UsersLong.format(user),
               relationships: {
-                interests,
+                interests: user.Interests && user.Interests.map((interest) => ({
+                  id: interest.id,
+                  description: interest.description,
+                  type: interest.type,
+                })),
               },
               token,
             },
@@ -188,8 +196,8 @@ module.exports = class Users {
           res.status(201).json({
             data: {
               type: 'User',
-              id: user.id,
-              attributes: UsersLong.format(user),
+              id: newUser.id,
+              attributes: UsersLong.format(newUser),
               token,
             },
           });

@@ -27,6 +27,7 @@ module.exports = class Login {
           },
         };
         const facebookData = await request(options);
+        console.log('facebookData', facebookData)
         const token = await login(JSON.parse(facebookData).email);
         if (token) {
           return res.status(201).json({
