@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
 const {
-  Initiative, Interests, InitiativesImages, Matches,
+  Initiative, Interests, InitiativesImages, Matches, User,
 } = require('../../domain/entities');
 const { uploadImage, findMessages } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
@@ -97,7 +97,19 @@ module.exports = class Initiatives {
 
         const initiative = await Initiative.findOne({
           where: { id: req.params.initiativeId },
-          include: [Interests, InitiativesImages],
+          include: [Interests, InitiativesImages, User],
+        });
+
+        const matches = await Matches.findAll({
+          where: {
+            InitiativeId: req.params.initiativeId,
+            liked: true,
+          },
+          include: [
+            {
+              model: User,
+            },
+          ],
         });
 
         if (initiative) {
@@ -109,6 +121,12 @@ module.exports = class Initiatives {
               type: 'Initiative',
               id: data.id,
               attributes: longJson.format(data),
+              relationships: {
+                interests: data.Interests,
+                images: data.InitiativesImages,
+                members: matches.map((item) => item.User),
+                creator: data.User,
+              },
             },
           });
         }

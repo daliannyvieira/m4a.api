@@ -69,7 +69,7 @@ module.exports = class Users {
             {
               model: Initiative,
               as: 'UserInitiatives',
-              include: [InitiativesImages],
+              include: [InitiativesImages, Interests],
             },
           ],
         });
@@ -81,7 +81,7 @@ module.exports = class Users {
           include: [
             {
               model: Initiative,
-              include: [InitiativesImages],
+              include: [InitiativesImages, Interests],
             },
           ],
         });
