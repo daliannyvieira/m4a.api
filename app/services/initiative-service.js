@@ -2,7 +2,7 @@ const { Op } = require('sequelize');
 const {
   Initiative, Interests, InitiativesImages, Matches, User,
 } = require('../../domain/entities');
-const { uploadImage, findMessages } = require('../../infra/cloud-storage');
+const { uploadImage } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
 const { InitiativeRepository } = require('../../domain/repositories');
 const { loggedUser } = require('../../domain/auth');
@@ -20,33 +20,6 @@ module.exports = class Initiatives {
     this.findInitiativesList();
     this.uploadPhotos();
     this.deleteInitiative();
-    this.getMessages();
-  }
-
-  getMessages() {
-    this.router.get('/initiative/chat/messages', async (req, res) => {
-      try {
-        const { initiative } = req.query;
-        if (initiative) {
-          const messages = await findMessages(initiative);
-          return res.status(200).json({
-            data: {
-              messages,
-            },
-          });
-        }
-        return res.status(404).json({
-          errors: [{
-            message: 'Didn’t any messages here!',
-          }],
-        });
-      } catch (err) {
-        console.log('err', err)
-        return res.status(500).json({
-          errors: [err],
-        });
-      }
-    });
   }
 
   createInitiative() {

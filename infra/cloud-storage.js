@@ -9,28 +9,6 @@ admin.initializeApp({
 
 const bucket = admin.storage().bucket();
 
-const findMessages = async (initiativeName) => {
-  const ref = await admin.firestore()
-    .collection('chat')
-    .doc(initiativeName)
-    .collection('messages');
-
-  try {
-    const receivedMessages = [];
-    const messages = await ref.get();
-    messages.forEach((doc) => {
-      receivedMessages.push({
-        _id: doc.id,
-        ...doc.data(),
-      });
-    });
-    return receivedMessages;
-  } catch (err) {
-    console.log('Error getting documents', err);
-    return err;
-  }
-};
-
 const uploadImage = async (file, fileName) => {
   const prom = new Promise((resolve, reject) => {
     if (!file) {
@@ -62,4 +40,4 @@ const uploadImage = async (file, fileName) => {
   return prom;
 };
 
-module.exports = { uploadImage, findMessages };
+module.exports = { uploadImage };
