@@ -20,6 +20,8 @@ module.exports = class Initiatives {
     this.findInitiativesList();
     this.uploadPhotos();
     this.deleteInitiative();
+    this.updateInitiative();
+    this.updateInitiativeInterests();
   }
 
   createInitiative() {
@@ -85,7 +87,7 @@ module.exports = class Initiatives {
           ],
         });
 
-        if (initiative) {
+        if (initiative && user) {
           const data = initiative;
           data.Matches = user.Initiatives;
 
@@ -154,6 +156,11 @@ module.exports = class Initiatives {
             data: initiatives.map((initiative) => shortJson.format(initiative)),
           });
         }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
       } catch (err) {
         console.log(err);
         return res.status(500).json({
@@ -222,6 +229,65 @@ module.exports = class Initiatives {
         });
       } catch (err) {
         console.log(err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  updateInitiative() {
+    this.router.put('/initiative/:initiativeId', async (req, res) => {
+      try {
+        const initiative = await Initiative.findOne({
+          where: { id: req.params.initiativeId },
+        });
+        if (initiative) {
+          const update = await initiative.update(
+            req.body, {
+              where: { id: initiative.id },
+            },
+          );
+          res.status(200).json({
+            data: {
+              type: 'Initiative',
+              id: initiative.id,
+              attributes: update.dataValues,
+            },
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  updateInitiativeInterests() {
+    this.router.put('/initiative/:initiativeId/interests', async (req, res) => {
+      try {
+        const initiative = await Initiative.findOne({
+          where: { id: req.params.initiativeId },
+        });
+        if (initiative) {
+          await initiative.setInterests(req.body.interests);
+          return res.status(201).json({
+            message: 'Interests has been updated.',
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
         return res.status(500).json({
           errors: [err],
         });
