@@ -2,7 +2,7 @@ const { Op } = require('sequelize');
 const {
   Initiative, Interests, InitiativesImages, Matches, User,
 } = require('../../domain/entities');
-const { uploadImage } = require('../../infra/cloud-storage');
+const { uploadImage, deleteImage } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
 const { InitiativeRepository } = require('../../domain/repositories');
 const { loggedUser } = require('../../domain/auth');
@@ -22,6 +22,7 @@ module.exports = class Initiatives {
     this.deleteInitiative();
     this.updateInitiative();
     this.updateInitiativeInterests();
+    this.removePhoto();
   }
 
   createInitiative() {
@@ -163,6 +164,39 @@ module.exports = class Initiatives {
         });
       } catch (err) {
         console.log(err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  removePhoto() {
+    this.router.delete('/initiative/:initiativeId/photos/:photoId', multer.single('image'), async (req, res) => {
+      try {
+        const image = await InitiativesImages.findOne({
+          where: { id: req.params.photoId },
+          include: [Initiative],
+        });
+
+        if (image) {
+          const removed = await deleteImage(image.name);
+
+          if (removed) {
+            await InitiativesImages.destroy({
+              where: { id: req.params.photoId },
+            });
+            return res.status(200).json({
+              message: 'Image has been deleted.',
+            });
+          }
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
         return res.status(500).json({
           errors: [err],
         });

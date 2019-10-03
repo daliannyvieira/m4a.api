@@ -40,4 +40,23 @@ const uploadImage = async (file, fileName) => {
   return prom;
 };
 
-module.exports = { uploadImage };
+const getImage = async (imageName) => {
+  try {
+    const file = await bucket.file(imageName);
+    return await file.get();
+  } catch (err) {
+    return err;
+  }
+};
+
+const deleteImage = async (imageName) => {
+  try {
+    const file = await bucket.file(imageName);
+    return await file.remove();
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+};
+
+module.exports = { uploadImage, getImage, deleteImage };
