@@ -31,8 +31,7 @@ const uploadImage = async (file, fileName) => {
     });
 
     blobStream.on('finish', () => {
-      const url = `https://${storageBucket}.storage.googleapis.com/${newFileName}`;
-      resolve(url);
+      resolve(newFileName);
     });
 
     blobStream.end(file.buffer);
@@ -59,4 +58,4 @@ const deleteImage = async (imageName) => {
   }
 };
 
-module.exports = { uploadImage, getImage, deleteImage };
+module.exports = { uploadImage, getImage, deleteImage, storageBucket };
