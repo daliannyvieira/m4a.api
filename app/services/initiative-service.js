@@ -290,12 +290,24 @@ module.exports = class Initiatives {
   deleteInitiative() {
     this.router.delete('/initiative/:initiativeId', async (req, res) => {
       try {
-        if (await Initiative.findOne({ where: { id: req.params.initiativeId } })) {
-          if (await Initiative.destroy({ where: { id: req.params.initiativeId } })) {
+        const user = await loggedUser(req);
+        const initiative = await Initiative.findOne({
+          where: { id: req.params.initiativeId },
+        });
+        if (initiative) {
+          if (user.id === initiative.UserId) {
+            await Initiative.destroy({
+              where: { id: req.params.initiativeId },
+            });
             return res.status(200).json({
               message: 'Initiative has been deleted.',
             });
           }
+          return res.status(403).json({
+            errors: [{
+              message: 'This is not your initiative!',
+            }],
+          });
         }
         return res.status(404).json({
           errors: [{
