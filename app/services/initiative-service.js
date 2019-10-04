@@ -214,22 +214,39 @@ module.exports = class Initiatives {
   removePhoto() {
     this.router.delete('/initiative/:initiativeId/photo/:photoId', multer.single('image'), async (req, res) => {
       try {
-        const image = await InitiativesImages.findOne({
-          where: { id: req.params.photoId },
-          include: [Initiative],
+        const user = await loggedUser(req);
+        const initiative = await Initiative.findOne({
+          where: { id: req.params.initiativeId },
         });
-
-        if (image) {
-          const removed = await deleteImage(image.name);
-
-          if (removed) {
-            await InitiativesImages.destroy({
+        if (initiative) {
+          if (user.id === initiative.UserId) {
+            const image = await InitiativesImages.findOne({
               where: { id: req.params.photoId },
+              include: [Initiative],
             });
-            return res.status(200).json({
-              message: 'Image has been deleted.',
+            if (image) {
+              const removed = await deleteImage(image.name);
+
+              if (removed) {
+                await InitiativesImages.destroy({
+                  where: { id: req.params.photoId },
+                });
+                return res.status(200).json({
+                  message: 'Image has been deleted.',
+                });
+              }
+            }
+            return res.status(404).json({
+              errors: [{
+                message: 'Didn’t find anything here!',
+              }],
             });
           }
+          return res.status(503).json({
+            errors: [{
+              message: 'This is not your initiative!',
+            }],
+          });
         }
         return res.status(404).json({
           errors: [{
