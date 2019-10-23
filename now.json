@@ -3,11 +3,11 @@
     "RELACIONAL_DB_USERNAME": "@m4a_db_username",
     "RELACIONAL_DB_PASS": "@m4a_db_pass",
     "RELACIONAL_DB_NAME": "@m4a_db_name",
-    "RELACIONAL_DB_HOST": "@m4a_db_host",
+    "RELACIONAL_DB_HOST": "@m4a_db_dev_host",
     "JWT_SECRET": "@m4a_db_jwt",
     "FIREBASE_PROJECT_ID": "@m4a_firebase_projectid",
     "NODE_ENV": "development"
   },
-  "alias": "dev-m4a-api.now.sh",
-  "name": "dev-m4a-api"
+  "alias": "m4a-api.now.sh",
+  "name": "m4a-api"
 }

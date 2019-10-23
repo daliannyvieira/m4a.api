@@ -1,7 +1,7 @@
 const {
   User, Initiative, Matches, Interests, InitiativesImages,
 } = require('../../domain/entities');
-const { uploadImage } = require('../../infra/cloud-storage');
+const { uploadImage, storageBucket } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
 const { login } = require('../../domain/auth');
 const { loggedUser } = require('../../domain/auth');
@@ -222,10 +222,10 @@ module.exports = class Users {
 
           if (file) {
             const image = await uploadImage(file, username);
-
             if (image) {
               const data = await user.update(
-                { avatar: image }, { where: { id: user.id } },
+                { avatar: `https://${storageBucket}.storage.googleapis.com/${image}`, },
+                { where: { id: user.id } },
               );
               res.status(200).json({
                 data: {

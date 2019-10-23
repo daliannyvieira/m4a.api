@@ -9,24 +9,30 @@ const secret = config.jwtSecret;
 const login = async (email) => {
   const user = await User.findOne({
     where: { email },
+    include: [Interests],
   });
   if (!user) {
     return undefined;
   }
-  return jwt.sign({ email: user.email },
-    secret, {
-      expiresIn: '7d',
-    });
+  return jwt.sign({
+    sub: user.id,
+    info: user,
+    aud: 'Match4Action',
+    iss: 'Match4Action',
+  },
+  secret, {
+    expiresIn: '7d',
+  });
 };
 
 const loggedUser = async (req) => {
   try {
     const authorization = req.header('Authorization');
     const token = authorization.replace('Bearer ', '');
-    const info = jwt.verify(token, secret);
+    const decoded = jwt.verify(token, secret);
 
     return await User.findOne({
-      where: { email: info.email },
+      where: { email: decoded.info.email },
       include: [Interests],
     });
   } catch (err) {
