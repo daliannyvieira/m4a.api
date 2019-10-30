@@ -143,19 +143,23 @@ module.exports = class Users {
               where: { id: user.id },
             },
           );
+          const token = await login(user.email);
+          res.setHeader('Authorization', `Bearer ${token}`);
           res.status(200).json({
             data: {
               type: 'User',
               id: user.id,
               attributes: UsersLong.format(update.dataValues),
+              token,
             },
           });
+        } else {
+          return res.status(404).json({
+            errors: [{
+              message: 'Didn’t find anything here!',
+            }],
+          });
         }
-        return res.status(404).json({
-          errors: [{
-            message: 'Didn’t find anything here!',
-          }],
-        });
       } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -177,6 +181,7 @@ module.exports = class Users {
             where: { email: req.body.email },
             include: [Interests],
           });
+          res.setHeader('Authorization', `Bearer ${token}`);
           res.status(201).json({
             data: {
               type: 'User',

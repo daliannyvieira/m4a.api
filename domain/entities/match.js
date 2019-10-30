@@ -12,6 +12,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
+    muted: {
+      type: DataTypes.BOOLEAN,
+    },
   });
 
   Matches.associate = (models) => {

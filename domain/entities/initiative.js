@@ -48,6 +48,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     start: DataTypes.DATE,
     finish: DataTypes.DATE,
+    muted: {
+      type: DataTypes.BOOLEAN,
+    },
     UserId: {
       type: DataTypes.INTEGER,
       allowNull: false,

@@ -1,4 +1,3 @@
-'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('Initiatives', {
@@ -57,21 +56,21 @@ module.exports = {
       updatedAt: {
         type: Sequelize.DATE,
       },
+      muted: {
+        type: Sequelize.BOOLEAN,
+      },
       UserId: {
         type: Sequelize.INTEGER,
         references: { model: 'Users', key: 'id' },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE',
       },
     });
 
     queryInterface.addIndex('Initiatives', [
-      'country', 'state', 'city'
-    ])
-
+      'country', 'state', 'city',
+    ]);
   },
 
-  down: (queryInterface) => {
-    return queryInterface.dropTable('Initiatives');
-  }
+  down: (queryInterface) => queryInterface.dropTable('Initiatives'),
 };
