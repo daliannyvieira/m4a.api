@@ -11,6 +11,7 @@ module.exports = class Users {
   expose() {
     this.createMatch();
     this.removeMatch();
+    this.updateMatch();
   }
 
   createMatch() {
@@ -74,6 +75,54 @@ module.exports = class Users {
             errors: [{
               message: 'Didn’t find anything here!',
             }],
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  updateMatch() {
+    this.router.put('/user/:userId/initiative/:initiativeId', async (req, res) => {
+      try {
+        const user = await User.findOne({
+          where: { id: req.params.userId },
+          include: [{ model: Initiative, as: 'UserInitiatives' }],
+        });
+        if (user && req.params.initiativeId) {
+          const isOwner = user.UserInitiatives.find((initiative) => initiative.dataValues.id == req.params.initiativeId);
+          if (isOwner) {
+            await Initiative.update(
+              req.body, {
+                where: {
+                  id: req.params.initiativeId,
+                  UserId: req.params.userId,
+                },
+              },
+            );
+            return res.status(200).json({
+              message: 'Match was updated with success.',
+            });
+          }
+          await Matches.update(
+            req.body, {
+              where: {
+                InitiativeId: req.params.initiativeId,
+                UserId: req.params.userId,
+              },
+            },
+          );
+          return res.status(200).json({
+            message: 'Match was updated with success.',
           });
         }
         return res.status(404).json({
