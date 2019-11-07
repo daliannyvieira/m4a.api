@@ -7,9 +7,9 @@
     "PROD_RELACIONAL_DB_HOST": "@m4a_db_host",
     "JWT_SECRET": "@m4a_db_jwt",
     "FIREBASE_PROJECT_ID": "@m4a_firebase_projectid",
-    "NODE_ENV": "production"
+    "NODE_ENV": "development"
   },
   "version": 1,
-  "alias": "prod-m4a-api.now.sh",
+  "alias": "dev-m4a-api.now.sh",
   "name": "m4a-api"
 }

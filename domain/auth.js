@@ -1,22 +1,51 @@
 const jwt = require('jsonwebtoken');
-const { User, Interests, Initiative } = require('./entities');
+const {
+  User, Interests, Initiative, Matches,
+} = require('./entities');
 
 const env = process.env.NODE_ENV || 'development';
-const config = require(`${__dirname }/../config/config.js`)[env];
+const config = require(`${__dirname}/../config/config.js`)[env];
+
+const UsersLong = require('../app/responses/users-long');
 
 const secret = config.jwtSecret;
 
 const login = async (email) => {
   const user = await User.findOne({
     where: { email },
-    include: [Interests],
+    include: [
+      Interests,
+      {
+        model: Initiative,
+        as: 'UserInitiatives',
+      },
+    ],
   });
   if (!user) {
     return undefined;
   }
+  const matches = await Matches.findAll({
+    where: {
+      UserId: user.id,
+      liked: true,
+    },
+  });
+  const data = {
+    id: user.id,
+    ...UsersLong.format(user),
+    interests: user.Interests.map((item) => ({
+      id: item.id,
+      description: item.description,
+      type: item.type,
+    })),
+    listening_groups: [
+      ...user.UserInitiatives.filter((item) => item.muted !== true).map((item) => item.id),
+      ...matches.filter((item) => item.muted !== true).map((item) => item.InitiativeId),
+    ],
+  };
   return jwt.sign({
     sub: user.id,
-    info: user,
+    info: data,
     aud: 'Match4Action',
     iss: 'Match4Action',
   },

@@ -9,6 +9,7 @@ const longJson = {
       country: initiative.country,
       state: initiative.state,
       city: initiative.city,
+      muted: initiative.muted,
       address: initiative.address,
       zipcode: initiative.zipcode,
       latlong: initiative.latlong,
@@ -17,26 +18,7 @@ const longJson = {
       finish: initiative.finish,
       userId: initiative.UserId,
       createdAt: initiative.createdAt,
-      updatedAt: initiative.updatedAt
-        /*relationships: {
-          interests: initiative.Interests && initiative.Interests.map(interest => ({
-            id: interest.id,
-            description: interest.description,
-            type: interest.type
-          })),
-          images: initiative.InitiativesImages && initiative.InitiativesImages.map(img => ({
-            id: img.id,
-            image: img.image
-          })),
-          matches: initiative.Matches && initiative.Matches.map(match => ({
-            id: match.id,
-            name: match.name,
-            website: match.website,
-            bio: match.bio,
-            avatar: match.avatar
-          }))
-        }
-      }*/
+      updatedAt: initiative.updatedAt,
     }
   }
 }
