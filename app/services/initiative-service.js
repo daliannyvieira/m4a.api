@@ -89,6 +89,8 @@ module.exports = class Initiatives {
           ],
         });
 
+        const hasItem = matches.find((item) => item.User.id === user.id);
+
         if (initiative && user) {
           const data = initiative;
           data.Matches = user.Initiatives;
@@ -97,9 +99,16 @@ module.exports = class Initiatives {
             data: {
               type: 'Initiative',
               id: data.id,
+              muted_notification: user.id === initiative.UserId
+                ? initiative && initiative.muted
+                : hasItem && hasItem.muted,
               attributes: longJson.format(data),
               relationships: {
-                interests: data.Interests,
+                Interests: data.Interests.map((item) => ({
+                  id: item.id,
+                  description: item.description,
+                  type: item.type,
+                })),
                 images: data.InitiativesImages,
                 members: matches.map((item) => item.User),
                 creator: data.User,

@@ -33,7 +33,7 @@ const login = async (email) => {
   const data = {
     id: user.id,
     ...UsersLong.format(user),
-    interests: user.Interests.map((item) => ({
+    Interests: user.Interests.map((item) => ({
       id: item.id,
       description: item.description,
       type: item.type,

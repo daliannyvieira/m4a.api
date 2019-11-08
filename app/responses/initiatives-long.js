@@ -9,7 +9,6 @@ const longJson = {
       country: initiative.country,
       state: initiative.state,
       city: initiative.city,
-      muted: initiative.muted,
       address: initiative.address,
       zipcode: initiative.zipcode,
       latlong: initiative.latlong,

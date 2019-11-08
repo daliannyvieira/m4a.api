@@ -1,7 +1,7 @@
 const {
   User, Initiative, Matches,
 } = require('../../domain/entities');
-const { loggedUser } = require('../../domain/auth');
+const { loggedUser, login } = require('../../domain/auth');
 
 module.exports = class Users {
   constructor(router) {
@@ -109,6 +109,8 @@ module.exports = class Users {
                 },
               },
             );
+            const token = await login(user.email);
+            res.setHeader('Authorization', `Bearer ${token}`);
             return res.status(200).json({
               message: 'Match was updated with success.',
             });
@@ -121,6 +123,8 @@ module.exports = class Users {
               },
             },
           );
+          const token = await login(user.email);
+          res.setHeader('Authorization', `Bearer ${token}`);
           return res.status(200).json({
             message: 'Match was updated with success.',
           });
