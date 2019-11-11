@@ -29,6 +29,9 @@ const login = async (email) => {
       UserId: user.id,
       liked: true,
     },
+    include: [
+      Initiative,
+    ],
   });
   const data = {
     id: user.id,
@@ -39,8 +42,14 @@ const login = async (email) => {
       type: item.type,
     })),
     listening_groups: [
-      ...user.UserInitiatives.filter((item) => item.muted !== true).map((item) => item.id),
-      ...matches.filter((item) => item.muted !== true).map((item) => item.InitiativeId),
+      ...user.UserInitiatives.filter((item) => item.muted !== true).map((item) => ({
+        id: item.Initiative.id,
+        name: item.Initiative.name,
+      })),
+      ...matches.filter((item) => item.muted !== true).map((item) => ({
+        id: item.Initiative.id,
+        name: item.Initiative.name,
+      })),
     ],
   };
   return jwt.sign({
