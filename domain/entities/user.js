@@ -41,6 +41,7 @@ module.exports = (sequelize, DataTypes) => {
     address: DataTypes.STRING,
     latlong: DataTypes.GEOMETRY('POINT', 4326),
     zipcode: DataTypes.STRING,
+    facebookId: DataTypes.STRING,
     allowToRemote: DataTypes.INTEGER,
     userProfile: {
       type: DataTypes.STRING,

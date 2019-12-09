@@ -3,7 +3,7 @@ const {
 } = require('../../domain/entities');
 const { uploadImage, storageBucket } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
-const { login } = require('../../domain/auth');
+const { login, loginFB } = require('../../domain/auth');
 const { loggedUser } = require('../../domain/auth');
 const UsersShort = require('../responses/users-short');
 const UsersLong = require('../responses/users-long');
@@ -174,7 +174,6 @@ module.exports = class Users {
       try {
         const newUser = await User.create(req.body);
         const token = await login(req.body.email);
-
         if (req.body.interests) {
           await newUser.setInterests(req.body.interests);
           const user = await User.findOne({
@@ -208,6 +207,7 @@ module.exports = class Users {
           });
         }
       } catch (err) {
+        console.log(err)
         res.status(500).json(err.errors && err.errors.map((error) => ({
           message: error.message,
           type: error.type,

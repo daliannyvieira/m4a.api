@@ -1,5 +1,5 @@
 const request = require('request-promise');
-const { login, loggedUser } = require('../../domain/auth');
+const { login, loginFB, loggedUser } = require('../../domain/auth');
 const UserJson = require('../responses/users-long');
 
 module.exports = class Login {
@@ -26,9 +26,8 @@ module.exports = class Login {
             fields,
           },
         };
-        const facebookData = await request(options);
-        console.log('facebook', facebookData)
-        const token = await login(JSON.parse(facebookData).email);
+        const facebook = await request(options);
+        const token = await loginFB(JSON.parse(facebook));
         if (token) {
           return res.status(201).json({
             data: token,

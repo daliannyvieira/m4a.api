@@ -54,15 +54,7 @@ const login = async (email) => {
     ],
   };
 
-  return jwt.sign({
-    sub: user.id,
-    info: data,
-    aud: 'Match4Action',
-    iss: 'Match4Action',
-  },
-  secret, {
-    expiresIn: '7d',
-  });
+  return await auth(data);
 };
 
 const loggedUser = async (req) => {
@@ -144,6 +136,80 @@ const routerList = [
   },
 ];
 
+const loginFB = async (info) => {
+  let user = undefined;
+  if (info.id) {
+    user = await User.findOne({
+      where: { facebookId: info.id},
+      include: [
+        Interests,
+        {
+          model: Initiative,
+          as: 'UserInitiatives',
+        },
+      ],
+    });
+  }
+  if (!info.id) {
+    user = await User.findOne({
+      where: { username: info.name },
+      include: [
+        Interests,
+        {
+          model: Initiative,
+          as: 'UserInitiatives',
+        },
+      ],
+    });
+  }
+  if (!user) {
+    return undefined;
+  }
+  const matches = await Matches.findAll({
+    where: {
+      UserId: user.id,
+      liked: true,
+    },
+    include: [
+      Initiative,
+    ],
+  });
+
+  const data = {
+    id: user.id,
+    ...UsersLong.format(user),
+    facebookId: user.facebookId && user.facebookId,
+    Interests: user.Interests.map((item) => ({
+      id: item.id,
+      description: item.description,
+      type: item.type,
+    })),
+    listening_groups: [
+      ...user.UserInitiatives.filter((item) => item.muted !== true).map((item) => ({
+        id: item.id,
+        name: item.name,
+      })),
+      ...matches.filter((item) => item.muted !== true).map((item) => ({
+        id: item.Initiative.id,
+        name: item.Initiative.name,
+      })),
+    ],
+  };
+  return await auth(data);
+};
+
+const auth = async (data) => {
+  return jwt.sign({
+    sub: data.id,
+    info: data,
+    aud: 'Match4Action',
+    iss: 'Match4Action',
+  },
+    secret, {
+    expiresIn: '7d',
+  });
+}
+
 module.exports = {
-  login, loggedUser, requiresAuth, routerList,
+  login, loginFB, loggedUser, requiresAuth, routerList,
 };
