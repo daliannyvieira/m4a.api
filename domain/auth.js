@@ -139,7 +139,6 @@ const routerList = [
 const loginFB = async (info) => {
   let user = undefined;
   if (info.id) {
-    console.log('entrou aqui 1')
     user = await User.findOne({
       where: { facebookId: info.id},
       include: [
@@ -150,10 +149,8 @@ const loginFB = async (info) => {
         },
       ],
     });
-    console.log('user', user)
   }
   if (user === null) {
-    console.log('entrou aqui 2')
     user = await User.findOne({
       where: { username: info.name },
       include: [
