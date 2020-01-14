@@ -25,8 +25,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Organization.associate = (models) => {
     Organization.belongsTo(models.User, { foreignKey: 'id_admin'});
-
-    // Organization.belongsToMany(models.Interests, { through: 'InitiativesInterests' });
+    Organization.belongsToMany(models.Interests, { through: 'OrganizationsInterests' });
   };
 
   return Organization;
