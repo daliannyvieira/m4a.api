@@ -8,6 +8,7 @@ const InitiativeService = require('./app/services/initiative-service.js');
 const InterestService = require('./app/services/interest-service');
 const MatchService = require('./app/services/match-service');
 const Login = require('./app/services/auth-service');
+const OrganizationService = require('./app/services/organization-service');
 
 const port = 3000;
 
@@ -43,6 +44,7 @@ class Server {
     new Login(this.router).expose();
     new InterestService(this.router).expose();
     new MatchService(this.router).expose();
+    new OrganizationService(this.router).expose();
 
     this.app.use('/', this.router);
     this.app.listen(port, () => {

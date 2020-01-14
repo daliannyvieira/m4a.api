@@ -140,7 +140,7 @@ const loginFB = async (info) => {
   let user = undefined;
   if (info.id) {
     user = await User.findOne({
-      where: { facebookId: info.id},
+      where: { facebookId: info.id },
       include: [
         Interests,
         {
@@ -148,7 +148,7 @@ const loginFB = async (info) => {
           as: 'UserInitiatives',
         },
       ],
-    });
+    })
   }
   if (user === null) {
     user = await User.findOne({
