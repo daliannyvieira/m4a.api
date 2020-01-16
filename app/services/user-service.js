@@ -5,8 +5,9 @@ const { uploadImage, storageBucket } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
 const { login, loginFB } = require('../../domain/auth');
 const { loggedUser } = require('../../domain/auth');
-const UsersShort = require('../responses/users-short');
-const UsersLong = require('../responses/users-long');
+const usersShortFormat = require('../responses/users-short');
+const usersLongFormat = require('../responses/users-long');
+const orgFormat = require('../responses/orgs-long');
 
 module.exports = class Users {
   constructor(router) {
@@ -38,7 +39,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: user.id,
-              attributes: UsersLong.format(user),
+              attributes: usersLongFormat.format(user),
               relationships: {
                 interests: user.Interests,
               },
@@ -91,7 +92,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: user.id,
-              attributes: UsersLong.format(user),
+              attributes: usersLongFormat.format(user),
               relationships: {
                 userInitiatives: user.UserInitiatives,
                 matches: matches.map((item) => item.Initiative),
@@ -150,7 +151,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: user.id,
-              attributes: UsersLong.format(update.dataValues),
+              attributes: usersLongFormat.format(update.dataValues),
               token,
             },
           });
@@ -186,7 +187,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: user.id,
-              attributes: UsersLong.format(user),
+              attributes: usersLongFormat.format(user),
               relationships: {
                 interests: user.Interests && user.Interests.map((interest) => ({
                   id: interest.id,
@@ -202,7 +203,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: newUser.id,
-              attributes: UsersLong.format(newUser),
+              attributes: usersLongFormat.format(newUser),
               token,
             },
           });
@@ -237,7 +238,7 @@ module.exports = class Users {
                 data: {
                   type: 'User',
                   id: data.id,
-                  attributes: UsersLong.format(data),
+                  attributes: usersLongFormat.format(data),
                 },
               });
             }
@@ -295,7 +296,7 @@ module.exports = class Users {
     this.router.get('/users', async (req, res) => {
       try {
         res.status(200).json({
-          data: await User.findAll().map((user) => UsersShort.format(user)),
+          data: await User.findAll().map((user) => usersShortFormat.format(user)),
         });
       } catch (err) {
         console.log(err);
@@ -307,36 +308,29 @@ module.exports = class Users {
     });
   }
 
+
   findOrgsByUser() {
     this.router.get('/user/:id/organizations', async (req, res) => {
       try {
-        const data = await User.findOne({
+        const data = await Organization.findAll({
           where: {
-            id: req.params.id,
+            id_admin: req.params.id,
           },
-          include: [
-            {
-              model: Organization,
-              as: 'userOrganizations',
-            },
-          ],
-        });
-        if (data) {
-          return res.status(200).json({
-            data: {
-              type: 'User',
-              id: data.id,
-              attributes: UsersLong.format(data),
-              relationships: {
-                myOrganizations: data.userOrganizations
-              },
-            },
-          });
-        }
-        return res.status(404).json({
-          errors: [{
-            message: 'Didn’t find anything here!',
-          }],
+          include: [Interests],
+        })
+        res.status(200).json({
+          data: data.map((org => ({
+            type: 'Organization',
+            id: org.id,
+            attributes: orgFormat.format(org),
+            relationships: {
+              interests: org.Interests.map(interest => ({
+                id: interest.id,
+                description: interest.description,
+                type: interest.type,
+              }))
+            }
+          })))
         });
       } catch (err) {
         console.log(err);
