@@ -9,22 +9,31 @@ module.exports = class Initiatives {
   }
 
   expose() {
-    this.findOrganizations();
+    this.findOrganization();
     this.createOrganization();
     this.uploadAvatar();
   }
 
-  findOrganizations() {
-    this.router.get('/organization', async (req, res) => {
+  findOrganization() {
+    this.router.get('/organization/:organizationId', async (req, res) => {
       try {
-        res.status(200).json({
-          data: await Organization.findAll().map((org) => {
-            return {
+        const data = await Organization.findOne({
+          where: { id: req.params.organizationId },
+        });
+
+        if (data) {
+          return res.status(200).json({
+            data: {
               type: 'Organization',
-              id: org.id,
-              attributes: org
-            }
-          }),
+              id: data.id,
+              attributes: data,
+            },
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
         });
       } catch (err) {
         res.status(500).json({

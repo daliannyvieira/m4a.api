@@ -1,5 +1,5 @@
 const {
-  User, Initiative, Matches, Interests, InitiativesImages,
+  User, Initiative, Matches, Interests, InitiativesImages, Organization
 } = require('../../domain/entities');
 const { uploadImage, storageBucket } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
@@ -22,6 +22,7 @@ module.exports = class Users {
     this.updateUserInterests();
     this.removeUser();
     this.findUsersList();
+    this.findOrgsByUser();
   }
 
   findUser() {
@@ -302,6 +303,46 @@ module.exports = class Users {
           message: error.message,
           type: error.type,
         })));
+      }
+    });
+  }
+
+  findOrgsByUser() {
+    this.router.get('/user/:id/organizations', async (req, res) => {
+      try {
+        const data = await User.findOne({
+          where: {
+            id: req.params.id,
+          },
+          include: [
+            {
+              model: Organization,
+              as: 'userOrganizations',
+            },
+          ],
+        });
+        if (data) {
+          return res.status(200).json({
+            data: {
+              type: 'User',
+              id: data.id,
+              attributes: UsersLong.format(data),
+              relationships: {
+                myOrganizations: data.userOrganizations
+              },
+            },
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+          errors: [err],
+        });
       }
     });
   }
