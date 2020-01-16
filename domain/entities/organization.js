@@ -1,6 +1,17 @@
 module.exports = (sequelize, DataTypes) => {
   const Organization = sequelize.define('Organization', {
-    name: DataTypes.STRING,
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: {
+        msg: 'name must be unique',
+      },
+      validate: {
+        notEmpty: {
+          msg: "name can't be empty",
+        },
+      },
+    },
     bio: DataTypes.STRING,
     id_admin: {
       type: DataTypes.INTEGER,
@@ -8,12 +19,15 @@ module.exports = (sequelize, DataTypes) => {
     },
     email: {
       type: DataTypes.STRING,
-      allowNull: false,
       unique: {
         msg: 'email must be unique',
       },
+      validate: {
+        isEmail: {
+          msg: 'email must be an email',
+        },
+      },
     },
-    email: DataTypes.STRING,
     birthday: DataTypes.DATE,
     avatar: DataTypes.STRING,
     country: DataTypes.STRING,
