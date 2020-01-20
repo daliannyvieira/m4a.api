@@ -57,7 +57,7 @@ module.exports = class Initiatives {
         const user = await loggedUser(req); 
 
         let newOrg = req.body
-        newOrg.id_admin = user.id
+        newOrg.idAdmin = user.id
         
         let data = await Organization.create(newOrg)
 
@@ -110,7 +110,7 @@ module.exports = class Initiatives {
           const org = await Organization.findOne({
             where: { id: organizationId },
           });
-          if (org.id_admin == user.id) {
+          if (org.idAdmin == user.id) {
             const image = await uploadImage(req.file, org.name);
             if (image) {
               const data = await org.update(
@@ -128,7 +128,7 @@ module.exports = class Initiatives {
           }
           return res.status(403).json({
             errors: [{
-              message: 'this initiative is not yours',
+              message: 'this organization is not yours',
             }],
           });
         }

@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     bio: DataTypes.STRING,
-    id_admin: {
+    idAdmin: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Organization.associate = (models) => {
-    Organization.belongsTo(models.User, { foreignKey: 'id_admin'});
+    Organization.belongsTo(models.User, { foreignKey: 'idAdmin'});
     Organization.belongsToMany(models.Interests, { through: 'OrganizationsInterests' });
   };
 

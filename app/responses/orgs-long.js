@@ -4,7 +4,7 @@ const longJson = {
       name: org.name,
       name: org.name,
       bio: org.bio,
-      id_admin: org.id_admin,
+      idAdmin: org.idAdmin,
       email: org.email,
       birthday: org.birthday,
       avatar: org.avatar,

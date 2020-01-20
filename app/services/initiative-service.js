@@ -38,7 +38,6 @@ module.exports = class Initiatives {
               type: 'Initiative',
               id: initiative.id,
               attributes: longJson.format(initiative),
-              relationships: longJson.format(initiative),
             },
           });
         }
@@ -51,17 +50,8 @@ module.exports = class Initiatives {
           },
         });
       } catch (err) {
-        const errors = err.errors && err.errors.map((error) => ({
-          message: error.message,
-          type: error.type,
-          field: error.path,
-        }));
         return res.status(500).json({
-          errors: [
-            {
-              message: err.name || errors,
-            },
-          ],
+          errors: [err],
         });
       }
     });

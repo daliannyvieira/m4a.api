@@ -314,7 +314,7 @@ module.exports = class Users {
       try {
         const data = await Organization.findAll({
           where: {
-            id_admin: req.params.id,
+            idAdmin: req.params.id,
           },
           include: [Interests],
         })

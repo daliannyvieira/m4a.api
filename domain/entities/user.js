@@ -68,7 +68,7 @@ module.exports = (sequelize, DataTypes) => {
   User.associate = (models) => { 
     User.hasMany(models.Initiative, { foreignKey: 'UserId', as: 'UserInitiatives' });
 
-    User.hasMany(models.Organization, { foreignKey: 'id_admin', as: 'userOrganizations' });
+    User.hasMany(models.Organization, { foreignKey: 'idAdmin', as: 'userOrganizations' });
 
     User.belongsToMany(models.Interests, { through: 'UsersInterests' });
 
