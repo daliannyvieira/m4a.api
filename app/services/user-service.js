@@ -6,7 +6,7 @@ const { multer } = require('../../infra/helpers');
 const { login, loginFB } = require('../../domain/auth');
 const { loggedUser } = require('../../domain/auth');
 const usersShortFormat = require('../responses/users-short');
-const usersLongFormat = require('../responses/users-long');
+const userLong = require('../responses/users-long');
 const orgFormat = require('../responses/orgs-long');
 
 module.exports = class Users {
@@ -39,7 +39,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: user.id,
-              attributes: usersLongFormat.format(user),
+              attributes: userLong.format(user),
               relationships: {
                 interests: user.Interests,
               },
@@ -92,7 +92,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: user.id,
-              attributes: usersLongFormat.format(user),
+              attributes: userLong.format(user),
               relationships: {
                 userInitiatives: user.UserInitiatives,
                 matches: matches.map((item) => item.Initiative),
@@ -151,7 +151,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: user.id,
-              attributes: usersLongFormat.format(update.dataValues),
+              attributes: userLong.format(update.dataValues),
               token,
             },
           });
@@ -187,7 +187,7 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: user.id,
-              attributes: usersLongFormat.format(user),
+              attributes: userLong.format(user),
               relationships: {
                 interests: user.Interests && user.Interests.map((interest) => ({
                   id: interest.id,
@@ -203,17 +203,16 @@ module.exports = class Users {
             data: {
               type: 'User',
               id: newUser.id,
-              attributes: usersLongFormat.format(newUser),
+              attributes: userLong.format(newUser),
               token,
             },
           });
         }
       } catch (err) {
         console.log(err)
-        res.status(500).json(err.errors && err.errors.map((error) => ({
-          message: error.message,
-          type: error.type,
-        })));
+        return res.status(500).json({
+          errors: [err],
+        });
       }
     });
   }
@@ -238,7 +237,7 @@ module.exports = class Users {
                 data: {
                   type: 'User',
                   id: data.id,
-                  attributes: usersLongFormat.format(data),
+                  attributes: userLong.format(data),
                 },
               });
             }

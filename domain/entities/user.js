@@ -63,6 +63,7 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
+    valeVinculo: DataTypes.STRING,
   });
 
   User.associate = (models) => { 

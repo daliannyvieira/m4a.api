@@ -1,6 +1,6 @@
 const { Organization, Interests } = require('../../domain/entities');
 const { loggedUser } = require('../../domain/auth');
-const { uploadImage, bucket } = require('../../infra/cloud-storage');
+const { uploadImage, storageBucket } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
 const orgFormat = require('../responses/orgs-long');
 
@@ -114,7 +114,7 @@ module.exports = class Initiatives {
             const image = await uploadImage(req.file, org.name);
             if (image) {
               const data = await org.update(
-                { avatar: `https://${bucket}.storage.googleapis.com/${image}`, },
+                { avatar: `https://${storageBucket}.storage.googleapis.com/${image}`, },
                 { where: { id: org.id } },
               );
               return res.status(201).json({
