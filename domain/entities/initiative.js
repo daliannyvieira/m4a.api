@@ -60,7 +60,12 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
-  });
+  },
+    {
+      paranoid: true,
+      timestamps: true
+    }
+  );
 
   Initiative.associate = (models) => {
     Initiative.belongsTo(models.User);

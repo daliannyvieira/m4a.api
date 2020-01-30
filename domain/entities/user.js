@@ -64,7 +64,12 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     valeVinculo: DataTypes.STRING,
-  });
+  },
+    {
+      paranoid: true,
+      timestamps: true
+    }
+  );
 
   User.associate = (models) => { 
     User.hasMany(models.Initiative, { foreignKey: 'UserId', as: 'UserInitiatives' });

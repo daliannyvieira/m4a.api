@@ -13,6 +13,67 @@ module.exports = class Initiatives {
     this.findOrganization();
     this.createOrganization();
     this.uploadAvatar();
+    this.findCommitees();
+    this.createCommitees();
+  }
+
+  createCommitees() {
+    this.router.post('/organization/:orgId/committee', async (req, res) => {
+      try {
+        let body = req.body 
+        body.idCommittee = req.params.orgId
+
+        const data = await Organization.create(body);
+
+        return res.status(201).json({
+          data: {
+            type: 'Committee',
+            id: data.id,
+            attributes: orgFormat.format(data),
+          },
+        })
+      }
+      catch (err) {
+        console.log('err', err)
+        res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  findCommitees() {
+    this.router.get('/organization/:orgId/committee', async (req, res) => {
+      try {
+        const data = await Organization.findOne({
+          where: {
+            id: req.params.orgId,
+          },
+          include: [
+            {
+              model: Organization,
+              as: 'Committee',
+            },
+          ],
+        });
+        return res.status(200).json({
+          data: {
+            type: 'Committee',
+            id: data.id,
+            attributes: orgFormat.format(data),
+            relationships: {
+              committees: data.Committee.map(committee => orgFormat.format(committee))
+            }
+          },
+        })
+      }
+      catch (err) {
+        console.log('err', err)
+        res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
   }
 
   findOrganization() {

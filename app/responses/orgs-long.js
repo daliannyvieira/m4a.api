@@ -2,7 +2,6 @@ const longJson = {
   format: (org) => {
     return {
       name: org.name,
-      name: org.name,
       bio: org.bio,
       idAdmin: org.idAdmin,
       email: org.email,
