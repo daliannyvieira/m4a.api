@@ -20,18 +20,48 @@ module.exports = class Initiatives {
   createCommitees() {
     this.router.post('/organization/:orgId/committee', async (req, res) => {
       try {
-        let body = req.body 
-        body.idCommittee = req.params.orgId
+        const user = await loggedUser(req);
+        if (user) {
+          let committee = req.body
+          committee.idCommittee = req.params.orgId
+          committee.idAdmin = user.id
 
-        const data = await Organization.create(body);
+          const data = await Organization.create(committee);
+          if (req.body.interests) {
+            await data.setInterests(req.body.interests);
 
-        return res.status(201).json({
-          data: {
-            type: 'Committee',
-            id: data.id,
-            attributes: orgFormat.format(data),
-          },
-        })
+            const org = await Organization.findOne({
+              where: { id: data.id },
+              include: [Interests],
+            });
+            return res.status(201).json({
+              data: {
+                type: 'Organization',
+                id: data.id,
+                attributes: orgFormat.format(data),
+                relationships: {
+                  interests: org.Interests && org.Interests.map((interest) => ({
+                    id: interest.id,
+                    description: interest.description,
+                    type: interest.type,
+                  })),
+                },
+              },
+            });
+          }
+          return res.status(201).json({
+            data: {
+              type: 'Organization',
+              id: data.id,
+              attributes: orgFormat.format(data),
+            },
+          })
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
       }
       catch (err) {
         console.log('err', err)
@@ -50,18 +80,25 @@ module.exports = class Initiatives {
             id: req.params.orgId,
           },
           include: [
+            Interests,
             {
               model: Organization,
               as: 'Committee',
+              include: [Interests],
             },
           ],
         });
         return res.status(200).json({
           data: {
-            type: 'Committee',
+            type: 'Organization',
             id: data.id,
             attributes: orgFormat.format(data),
             relationships: {
+              interests: data.Interests && data.Interests.map((interest) => ({
+                id: interest.id,
+                description: interest.description,
+                type: interest.type,
+              })),
               committees: data.Committee.map(committee => orgFormat.format(committee))
             }
           },

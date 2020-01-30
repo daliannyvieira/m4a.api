@@ -15,7 +15,7 @@ const UsersLong = {
       allowToRemote: user.allowToRemote,
       userStatus: user.userStatus,
       userProfile: user.userProfile,
-      valeVinculo: user.valeVinculo,
+      valeLink: user.valeLink,
     }
   }
 }
