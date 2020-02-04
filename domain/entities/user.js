@@ -43,16 +43,7 @@ module.exports = (sequelize, DataTypes) => {
     zipcode: DataTypes.STRING,
     facebookId: DataTypes.STRING,
     allowToRemote: DataTypes.INTEGER,
-    userProfile: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isIn: {
-          args: [['Organization', 'Volunteer']],
-          msg: 'userProfile must be an Organization or a Volunteer using lowercase',
-        },
-      },
-    },
+    userProfile: DataTypes.STRING,
     userStatus: {
       type: DataTypes.INTEGER,
       defaultValue: 1,

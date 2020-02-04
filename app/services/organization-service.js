@@ -27,35 +27,42 @@ module.exports = class Initiatives {
           committee.idAdmin = user.id
 
           const data = await Organization.create(committee);
-          if (req.body.interests) {
-            await data.setInterests(req.body.interests);
+          if (data) {
+            if (req.body.interests) {
+              await data.setInterests(req.body.interests);
 
-            const org = await Organization.findOne({
-              where: { id: data.id },
-              include: [Interests],
-            });
+              const org = await Organization.findOne({
+                where: { id: data.id },
+                include: [Interests],
+              });
+              return res.status(201).json({
+                data: {
+                  type: 'Organization',
+                  id: data.id,
+                  attributes: orgFormat.format(data),
+                  relationships: {
+                    interests: org.Interests && org.Interests.map((interest) => ({
+                      id: interest.id,
+                      description: interest.description,
+                      type: interest.type,
+                    })),
+                  },
+                },
+              });
+            }
             return res.status(201).json({
               data: {
                 type: 'Organization',
                 id: data.id,
                 attributes: orgFormat.format(data),
-                relationships: {
-                  interests: org.Interests && org.Interests.map((interest) => ({
-                    id: interest.id,
-                    description: interest.description,
-                    type: interest.type,
-                  })),
-                },
               },
-            });
+            })
           }
-          return res.status(201).json({
-            data: {
-              type: 'Organization',
-              id: data.id,
-              attributes: orgFormat.format(data),
-            },
-          })
+          return res.status(404).json({
+            errors: [{
+              message: 'Didn’t find anything here!',
+            }],
+          });
         }
         return res.status(404).json({
           errors: [{
@@ -64,9 +71,20 @@ module.exports = class Initiatives {
         });
       }
       catch (err) {
-        console.log('err', err)
+        let errors = []
+        if (err.name === 'SequelizeForeignKeyConstraintError') {
+          errors.push({
+            message: "You can't create a committee using this " + err.fields.join(),
+            details: err
+          })
+        }
+        else {
+          errors.push({
+            details: err
+          })
+        }
         res.status(500).json({
-          errors: [err],
+          errors
         });
       }
     });
@@ -88,21 +106,28 @@ module.exports = class Initiatives {
             },
           ],
         });
-        return res.status(200).json({
-          data: {
-            type: 'Organization',
-            id: data.id,
-            attributes: orgFormat.format(data),
-            relationships: {
-              interests: data.Interests && data.Interests.map((interest) => ({
-                id: interest.id,
-                description: interest.description,
-                type: interest.type,
-              })),
-              committees: data.Committee.map(committee => orgFormat.format(committee))
-            }
-          },
-        })
+        if (data) {
+          return res.status(200).json({
+            data: {
+              type: 'Organization',
+              id: data.id,
+              attributes: orgFormat.format(data),
+              relationships: {
+                interests: data.Interests && data.Interests.map((interest) => ({
+                  id: interest.id,
+                  description: interest.description,
+                  type: interest.type,
+                })),
+                committees: data.Committee.map(committee => orgFormat.format(committee))
+              }
+            },
+          })
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
       }
       catch (err) {
         console.log('err', err)
@@ -152,45 +177,53 @@ module.exports = class Initiatives {
   createOrganization() {
     this.router.post('/organization', async (req, res) => {
       try {
-        const user = await loggedUser(req); 
+        const user = await loggedUser(req);
 
-        let newOrg = req.body
-        newOrg.idAdmin = user.id
-        
-        let data = await Organization.create(newOrg)
+        if (user) {
+          let newOrg = req.body
+          newOrg.idAdmin = user.id
 
-        if (req.body.interests) {
-          await data.setInterests(req.body.interests);
 
-          const org = await Organization.findOne({
-            where: { id: data.id },
-            include: [Interests],
-          });
+          let data = await Organization.create(newOrg)
+
+          if (req.body.interests) {
+            await data.setInterests(req.body.interests);
+
+            const org = await Organization.findOne({
+              where: { id: data.id },
+              include: [Interests],
+            });
+            return res.status(201).json({
+              data: {
+                type: 'Organization',
+                id: data.id,
+                attributes: orgFormat.format(data),
+                relationships: {
+                  interests: org.Interests && org.Interests.map((interest) => ({
+                    id: interest.id,
+                    description: interest.description,
+                    type: interest.type,
+                  })),
+                },
+              },
+            });
+          }
           return res.status(201).json({
             data: {
               type: 'Organization',
               id: data.id,
               attributes: orgFormat.format(data),
-              relationships: {
-                interests: org.Interests && org.Interests.map((interest) => ({
-                  id: interest.id,
-                  description: interest.description,
-                  type: interest.type,
-                })),
-              },
             },
           });
         }
-
-        return res.status(201).json({
-          data: {
-            type: 'Organization',
-            id: data.id,
-            attributes: orgFormat.format(data),
-          },
+        return res.status(404).json({
+          errors: [{
+            message: 'user not found',
+          }],
         });
       }
       catch (err) {
+        console.log(err)
         res.status(500).json({
           errors: [err],
         });

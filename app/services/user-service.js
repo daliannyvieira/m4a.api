@@ -309,30 +309,36 @@ module.exports = class Users {
 
 
   findOrgsByUser() {
-    this.router.get('/user/:id/organizations', async (req, res) => {
+    this.router.get('/user/:userId/organizations', async (req, res) => {
       try {
         const data = await Organization.findAll({
           where: {
-            idAdmin: req.params.id,
+            idAdmin: req.params.userId,
           },
           include: [Interests],
         })
-        res.status(200).json({
-          data: data.map((org => ({
-            type: 'Organization',
-            id: org.id,
-            attributes: orgFormat.format(org),
-            relationships: {
-              interests: org.Interests.map(interest => ({
-                id: interest.id,
-                description: interest.description,
-                type: interest.type,
-              }))
-            }
-          })))
+        if (data) {
+          return res.status(200).json({
+            data: data.map((org => ({
+              type: 'Organization',
+              id: org.id,
+              attributes: orgFormat.format(org),
+              relationships: {
+                interests: org.Interests.map(interest => ({
+                  id: interest.id,
+                  description: interest.description,
+                  type: interest.type,
+                }))
+              }
+            })))
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
         });
       } catch (err) {
-        console.log(err);
         return res.status(500).json({
           errors: [err],
         });
