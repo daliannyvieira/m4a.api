@@ -29,10 +29,22 @@ module.exports = class Initiatives {
   createInitiative() {
     this.router.post('/initiative', async (req, res) => {
       try {
-        const initiative = await Initiative.create(req.body);
-
-        if (req.body.interests) {
-          await initiative.setInterests(req.body.interests);
+        const user = await loggedUser(req);
+        if (user) {
+          let body = req.body
+          body.UserId = user.id
+          const initiative = await Initiative.create(body);
+  
+          if (req.body.interests) {
+            await initiative.setInterests(req.body.interests);
+            return res.status(201).json({
+              data: {
+                type: 'Initiative',
+                id: initiative.id,
+                attributes: longJson.format(initiative),
+              },
+            });
+          }
           return res.status(201).json({
             data: {
               type: 'Initiative',
@@ -41,15 +53,13 @@ module.exports = class Initiatives {
             },
           });
         }
-
-        return res.status(201).json({
-          data: {
-            type: 'Initiative',
-            id: initiative.id,
-            attributes: longJson.format(initiative),
-          },
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
         });
       } catch (err) {
+        console.log('err', err)
         return res.status(500).json({
           errors: [err],
         });

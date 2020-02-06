@@ -16,6 +16,7 @@ const longJson = {
       start: initiative.start,
       finish: initiative.finish,
       userId: initiative.UserId,
+      orgId: initiative.OrganizationId,
       createdAt: initiative.createdAt,
       updatedAt: initiative.updatedAt,
     }

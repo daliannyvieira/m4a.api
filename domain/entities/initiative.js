@@ -51,15 +51,8 @@ module.exports = (sequelize, DataTypes) => {
     muted: {
       type: DataTypes.BOOLEAN,
     },
-    UserId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: "UserId can't be empty",
-        },
-      },
-    },
+    UserId: DataTypes.INTEGER,
+    OrganizationId: DataTypes.INTEGER,
   },
     {
       paranoid: true,
@@ -69,13 +62,9 @@ module.exports = (sequelize, DataTypes) => {
 
   Initiative.associate = (models) => {
     Initiative.belongsTo(models.User);
-
-    Initiative.hasMany(models.InitiativesImages, {
-      foreignKey: 'InitiativeId',
-    });
-
+    Initiative.belongsTo(models.Organization);
+    Initiative.hasMany(models.InitiativesImages, { foreignKey: 'InitiativeId' });
     Initiative.belongsToMany(models.Interests, { through: 'InitiativesInterests' });
-
     Initiative.belongsToMany(models.User, { through: 'Matches' });
   };
 

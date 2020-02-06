@@ -1,10 +1,16 @@
 const admin = require('firebase-admin');
+// require('dotenv').config();
+// require('dotenv').load();
+
+// console.log('process.env.RELACIONAL_DB_USERNAME', process.env.FIREBASE_CREDENTIALS)
+
+var serviceAccount = require('../firebase-adminsdk.json');
 
 const storageBucket = 'match4action-9e993.appspot.com';
 
 admin.initializeApp({
   storageBucket,
-  credential: admin.credential.cert('./firebase-adminsdk.json'),
+  credential: admin.credential.cert(serviceAccount),
 });
 
 const bucket = admin.storage().bucket();

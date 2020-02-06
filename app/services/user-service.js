@@ -175,13 +175,27 @@ module.exports = class Users {
     this.router.post('/user', async (req, res) => {
       try {
         const newUser = await User.create(req.body);
-        const token = await login(req.body.email);
+
+        const token = await login(req.body.email || req.body.facebookId);
+
         if (req.body.interests) {
           await newUser.setInterests(req.body.interests);
-          const user = await User.findOne({
-            where: { email: req.body.email },
-            include: [Interests],
-          });
+
+          let user = null
+          if (req.body.email) {
+            user = await User.findOne({
+              where: { email: req.body.email },
+              include: [Interests],
+            });
+          }
+
+          if (req.body.facebookId) {
+            user = await User.findOne({
+              where: { facebookId: req.body.facebookId },
+              include: [Interests],
+            });
+          }
+
           res.setHeader('Authorization', `Bearer ${token}`);
           res.status(201).json({
             data: {
@@ -299,14 +313,12 @@ module.exports = class Users {
         });
       } catch (err) {
         console.log(err);
-        res.status(500).json(err.errors && err.errors.map((error) => ({
-          message: error.message,
-          type: error.type,
-        })));
+        return res.status(500).json({
+          errors: [err],
+        });
       }
     });
   }
-
 
   findOrgsByUser() {
     this.router.get('/user/:userId/organizations', async (req, res) => {
@@ -315,7 +327,6 @@ module.exports = class Users {
           where: {
             idAdmin: req.params.userId,
           },
-          include: [Interests],
         })
         if (data) {
           return res.status(200).json({
@@ -323,13 +334,6 @@ module.exports = class Users {
               type: 'Organization',
               id: org.id,
               attributes: orgFormat.format(org),
-              relationships: {
-                interests: org.Interests.map(interest => ({
-                  id: interest.id,
-                  description: interest.description,
-                  type: interest.type,
-                }))
-              }
             })))
           });
         }

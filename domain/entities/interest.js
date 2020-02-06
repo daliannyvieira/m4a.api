@@ -26,7 +26,6 @@ module.exports = (sequelize, DataTypes) => {
 
   Interests.associate = (models) => {
     Interests.belongsToMany(models.User, { through: 'UsersInterests' });
-    Interests.belongsToMany(models.Organization, { through: 'OrganizationsInterests' });
   };
 
   return Interests;
