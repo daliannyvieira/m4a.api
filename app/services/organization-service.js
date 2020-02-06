@@ -1,6 +1,6 @@
 const { Organization } = require('../../domain/entities');
 const { loggedUser } = require('../../domain/auth');
-const { uploadImage, storageBucket } = require('../../infra/cloud-storage');
+const { uploadImage, storageBucket, getImage, deleteImage} = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
 const orgFormat = require('../responses/orgs-long');
 const { Op } = require('sequelize');
@@ -13,7 +13,7 @@ module.exports = class Initiatives {
   expose() {
     this.findOrganization();
     this.createOrganization();
-    this.uploadAvatar();
+    this.uploadImageOrg();
     this.findCommittees();
     this.createCommitees();
     this.findCommittee();
@@ -206,32 +206,41 @@ module.exports = class Initiatives {
     });
   }
 
-  uploadAvatar() {
+  uploadImageOrg() {
     this.router.post('/organization/:organizationId/avatar', multer.single('image'), async (req, res) => {
       try {
         if (req.file) {
           const user = await loggedUser(req);
-          const { organizationId } = req.params;
-
           const org = await Organization.findOne({
-            where: { id: organizationId },
+            where: {
+              id: req.params.organizationId
+            },
           });
-          if (org.idAdmin == user.id) {
-            const image = await uploadImage(req.file, org.name);
-            if (image) {
-              const data = await org.update(
-                { avatar: `https://${storageBucket}.storage.googleapis.com/${image}`, },
-                { where: { id: org.id } },
-              );
-              return res.status(201).json({
-                data: {
-                  type: 'Organization',
-                  id: data.id,
-                  attributes: orgFormat.format(data),
-                },
-              });
+
+          if (org && org.idAdmin == user.id) {
+            if (org.avatar !== null) {
+              await deleteImage(org.avatar.split("/").pop())
             }
+            const image = await uploadImage(req.file, `org_${org.name}_${Date.now()}`);
+            const data = await org.update(
+              { avatar: `https://${storageBucket}.storage.googleapis.com/${image}`, },
+              { where: { id: org.id } },
+            );
+            return res.status(201).json({
+              data: {
+                type: 'Organization',
+                id: data.id,
+                attributes: orgFormat.format(data),
+              },
+            });
           }
+          if (!org) {
+            return res.status(404).json({
+              errors: [{
+                message: 'Didn’t find anything here!',
+              }],
+            });
+          } 
           return res.status(403).json({
             errors: [{
               message: 'this organization is not yours',

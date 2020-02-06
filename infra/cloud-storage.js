@@ -1,8 +1,4 @@
 const admin = require('firebase-admin');
-// require('dotenv').config();
-// require('dotenv').load();
-
-// console.log('process.env.RELACIONAL_DB_USERNAME', process.env.FIREBASE_CREDENTIALS)
 
 var serviceAccount = require('../firebase-adminsdk.json');
 
@@ -57,7 +53,7 @@ const getImage = async (imageName) => {
 const deleteImage = async (imageName) => {
   try {
     const file = await bucket.file(imageName);
-    return await file.remove();
+    return await file.delete();
   } catch (err) {
     console.log(err);
     return err;
