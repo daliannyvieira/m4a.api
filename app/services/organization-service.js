@@ -221,7 +221,7 @@ module.exports = class Initiatives {
             if (org.avatar !== null) {
               await deleteImage(org.avatar.split("/").pop())
             }
-            const image = await uploadImage(req.file, `org_${org.name}_${Date.now()}`);
+            const image = await uploadImage(req.file, `org_${org.name}`);
             const data = await org.update(
               { avatar: `https://${storageBucket}.storage.googleapis.com/${image}`, },
               { where: { id: org.id } },
