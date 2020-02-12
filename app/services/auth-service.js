@@ -39,7 +39,7 @@ module.exports = class Login {
           }],
         });
       } catch (err) {
-        console.log('err', err)
+        console.log('err', err);
         return res.status(500).json({
           errors: [{
             message: err,

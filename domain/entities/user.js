@@ -52,13 +52,12 @@ module.exports = (sequelize, DataTypes) => {
     },
     valeLink: DataTypes.STRING,
   },
-    {
-      paranoid: true,
-      timestamps: true
-    }
-  );
+  {
+    paranoid: true,
+    timestamps: true,
+  });
 
-  User.associate = (models) => { 
+  User.associate = (models) => {
     User.hasMany(models.Initiative, { foreignKey: 'UserId', as: 'UserInitiatives' });
 
     User.hasMany(models.Organization, { foreignKey: 'idAdmin', as: 'userOrganizations' });

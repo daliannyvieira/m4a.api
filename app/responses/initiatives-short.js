@@ -13,6 +13,11 @@ const shortJson = {
       country: initiative.country,
       city: initiative.city,
       userId: initiative.UserId,
+      orgBeneficiary: initiative.orgBeneficiary,
+      beneficiaries: initiative.beneficiaries,
+      partners: initiative.partners,
+      volunteersExpectation: initiative.volunteersExpectation,
+      amountExpectation: initiative.amountExpectation,
     },
     relationships: {
       interests: initiative.Interests && initiative.Interests.map((interest) => ({

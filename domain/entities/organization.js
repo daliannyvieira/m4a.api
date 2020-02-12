@@ -37,25 +37,25 @@ module.exports = (sequelize, DataTypes) => {
     zipcode: DataTypes.STRING,
     OrganizationId: DataTypes.INTEGER,
   },
-    {
-      paranoid: true,
-      timestamps: true
-    }
-  );
+  {
+    paranoid: true,
+    timestamps: true,
+  });
 
-  
+
   Organization.associate = (models) => {
-    Organization.belongsTo(models.User, { foreignKey: 'idAdmin'});
+    Organization.hasMany(models.Initiative, { foreignKey: 'OrganizationId', as: 'OrganizationInitiatives' });
+    Organization.belongsTo(models.User, { foreignKey: 'idAdmin' });
     Organization.hasMany(Organization, {
       as: 'Committee',
       foreignKey: 'OrganizationId',
-      useJunctionTable: false
-    })
+      useJunctionTable: false,
+    });
     Organization.hasOne(Organization, {
       as: 'Organization',
       foreignKey: 'OrganizationId',
-      useJunctionTable: false
-    })
+      useJunctionTable: false,
+    });
   };
 
   return Organization;

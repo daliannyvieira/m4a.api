@@ -31,10 +31,10 @@ module.exports = class Initiatives {
       try {
         const user = await loggedUser(req);
         if (user) {
-          let body = req.body
-          body.UserId = user.id
+          const { body } = req;
+          body.UserId = user.id;
           const initiative = await Initiative.create(body);
-  
+
           if (req.body.interests) {
             await initiative.setInterests(req.body.interests);
             return res.status(201).json({
@@ -59,7 +59,7 @@ module.exports = class Initiatives {
           }],
         });
       } catch (err) {
-        console.log('err', err)
+        console.log('err', err);
         return res.status(500).json({
           errors: [err],
         });
@@ -361,7 +361,7 @@ module.exports = class Initiatives {
               where: { id: initiative.id },
             },
           );
-          res.status(200).json({
+          return res.status(200).json({
             data: {
               type: 'Initiative',
               id: initiative.id,
@@ -376,7 +376,7 @@ module.exports = class Initiatives {
         });
       } catch (err) {
         console.log(err);
-        res.status(500).json({
+        return res.status(500).json({
           errors: [err],
         });
       }

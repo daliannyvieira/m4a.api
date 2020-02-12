@@ -53,12 +53,16 @@ module.exports = (sequelize, DataTypes) => {
     },
     UserId: DataTypes.INTEGER,
     OrganizationId: DataTypes.INTEGER,
+    orgBeneficiary: DataTypes.STRING,
+    beneficiaries: DataTypes.INTEGER,
+    partners: DataTypes.STRING,
+    volunteersExpectation: DataTypes.INTEGER,
+    amountExpectation: DataTypes.INTEGER,
   },
-    {
-      paranoid: true,
-      timestamps: true
-    }
-  );
+  {
+    paranoid: true,
+    timestamps: true,
+  });
 
   Initiative.associate = (models) => {
     Initiative.belongsTo(models.User);

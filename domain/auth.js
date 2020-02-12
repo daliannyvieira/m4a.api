@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const {
   User, Interests, Initiative, Matches,
 } = require('./entities');
@@ -137,7 +138,7 @@ const routerList = [
 ];
 
 const loginFB = async (info) => {
-  let user = undefined;
+  let user;
   if (info.id) {
     user = await User.findOne({
       where: { facebookId: info.id },
@@ -148,7 +149,7 @@ const loginFB = async (info) => {
           as: 'UserInitiatives',
         },
       ],
-    })
+    });
   }
   if (user === null) {
     user = await User.findOne({
@@ -158,6 +159,12 @@ const loginFB = async (info) => {
         {
           model: Initiative,
           as: 'UserInitiatives',
+          where: {
+            muted: {
+              [Op.or]: [false, null],
+            },
+            deletedAt: null,
+          },
         },
       ],
     });
@@ -171,7 +178,15 @@ const loginFB = async (info) => {
       liked: true,
     },
     include: [
-      Initiative,
+      {
+        model: Initiative,
+        where: {
+          muted: {
+            [Op.or]: [false, null],
+          },
+          deletedAt: null,
+        },
+      },
     ],
   });
 
@@ -185,11 +200,11 @@ const loginFB = async (info) => {
       type: item.type,
     })),
     listening_groups: [
-      ...user.UserInitiatives.filter((item) => item.muted !== true).map((item) => ({
+      ...user.UserInitiatives.map((item) => ({
         id: item.id,
         name: item.name,
       })),
-      ...matches.filter((item) => item.muted !== true).map((item) => ({
+      ...matches.map((item) => ({
         id: item.Initiative.id,
         name: item.Initiative.name,
       })),
@@ -198,17 +213,15 @@ const loginFB = async (info) => {
   return await auth(data);
 };
 
-const auth = async (data) => {
-  return jwt.sign({
-    sub: data.id,
-    info: data,
-    aud: 'Match4Action',
-    iss: 'Match4Action',
-  },
-    secret, {
-    expiresIn: '7d',
-  });
-}
+const auth = async (data) => jwt.sign({
+  sub: data.id,
+  info: data,
+  aud: 'Match4Action',
+  iss: 'Match4Action',
+},
+secret, {
+  expiresIn: '7d',
+});
 
 module.exports = {
   login, loginFB, loggedUser, requiresAuth, routerList,
