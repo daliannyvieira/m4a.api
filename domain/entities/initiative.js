@@ -52,6 +52,19 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
     },
     UserId: DataTypes.INTEGER,
+    ownerType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: "ownerType can't be empty",
+        },
+        isIn: {
+          args: [['user', 'organization', 'committee']],
+          msg: "ownerType must be: 'user', 'organization' or 'committee'",
+        },
+      },
+    },
     OrganizationId: DataTypes.INTEGER,
     orgBeneficiary: DataTypes.STRING,
     beneficiaries: DataTypes.INTEGER,

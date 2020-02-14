@@ -44,6 +44,11 @@ module.exports = (sequelize, DataTypes) => {
 
 
   Organization.associate = (models) => {
+    Organization.hasMany(models.Member, {
+      foreignKey: 'OrganizationId',
+      as: 'OrganizationMembers',
+    });
+
     Organization.hasMany(models.Initiative, { foreignKey: 'OrganizationId', as: 'OrganizationInitiatives' });
     Organization.belongsTo(models.User, { foreignKey: 'idAdmin' });
     Organization.hasMany(Organization, {

@@ -25,6 +25,8 @@ module.exports = class Users {
     this.removeUser();
     this.findUsersList();
     this.findOrgsByUser();
+    this.findUserChat();
+    this.findUserByEmail();
   }
 
   findUser() {
@@ -43,6 +45,39 @@ module.exports = class Users {
               attributes: userFormat.format(user),
               relationships: {
                 interests: user.Interests,
+              },
+            },
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  findUserByEmail() {
+    this.router.get('/user', async (req, res) => {
+      try {
+        const user = await User.findOne({
+          where: { email: req.query.email },
+        });
+        if (user) {
+          return res.status(200).json({
+            data: {
+              type: 'User',
+              id: user.id,
+              attributes: {
+                name: user.username,
+                avatar: user.avatar,
+                email: user.email,
               },
             },
           });
@@ -336,6 +371,7 @@ module.exports = class Users {
         const data = await Organization.findAll({
           where: {
             idAdmin: req.params.userId,
+            OrganizationId: null,
           },
         });
         if (data) {
@@ -353,6 +389,66 @@ module.exports = class Users {
           }],
         });
       } catch (err) {
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  findUserChat() {
+    this.router.get('/user/:id/chats', async (req, res) => {
+      try {
+        const user = await User.findOne({
+          where: {
+            id: req.params.id,
+          },
+        });
+        const initiatives = await Initiative.findAll({
+          where: {
+            UserId: req.params.id,
+            deletedAt: null,
+          },
+          include: [InitiativesImages, Interests, Organization, User],
+        });
+        const matches = await Matches.findAll({
+          where: {
+            UserId: req.params.id,
+            liked: true,
+          },
+          include: [
+            {
+              model: Initiative,
+              where: {
+                deletedAt: null,
+              },
+              include: [InitiativesImages, Interests, Organization, User],
+            },
+          ],
+        });
+        if (user) {
+          return res.status(200).json({
+            data: {
+              initiatives: initiatives && initiatives.map((init) => ({
+                type: 'Initiative',
+                id: init.id,
+                attributes: initFormat.format(init),
+              })),
+              matches: matches && matches.map((match) => ({
+                type: 'Initiative',
+                id: match.Initiative.id,
+                attributes: initFormat.format(match.Initiative),
+              })),
+            },
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
+        console.log(err);
         return res.status(500).json({
           errors: [err],
         });

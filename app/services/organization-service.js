@@ -1,5 +1,7 @@
 const { Op } = require('sequelize');
-const { Organization, Initiative, InitiativesImages, Interests } = require('../../domain/entities');
+const {
+  Organization, Initiative, InitiativesImages, Interests, Member, User
+} = require('../../domain/entities');
 const { loggedUser } = require('../../domain/auth');
 const {
   uploadImage, storageBucket, deleteImage,
@@ -23,6 +25,8 @@ module.exports = class Initiatives {
     this.findCommittee();
     this.findOrgInitiatives();
     this.findCommitteeInitiatives();
+    this.createMember();
+    this.findMembers();
   }
 
   createCommitees() {
@@ -413,6 +417,77 @@ module.exports = class Initiatives {
         });
       } catch (err) {
         console.log('err', err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  createMember() {
+    this.router.post('/organization/:orgId/member', async (req, res) => {
+      try {
+        const { email } = req.body;
+        const user = await User.findOne({
+          where: {
+            email,
+          },
+        });
+        if (user) {
+          return res.status(201).json({
+            data: await Member.create({
+              OrganizationId: req.params.orgId,
+              UserId: user.id,
+            }),
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  findMembers() {
+    this.router.get('/organization/:orgId/members', async (req, res) => {
+      try {
+        const data = await Organization.findOne({
+          where: {
+            id: req.params.orgId,
+            // OrganizationId: null,
+          },
+          include: [
+            {
+              model: Member,
+              as: 'OrganizationMembers',
+              include: [User],
+            },
+          ],
+        });
+        if (data) {
+          return res.status(200).json({
+            data,
+            // data: {
+            //   type: 'Organization',
+            //   id: data.id,
+            //   attributes: orgFormat.format(data),
+            // },
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
+        console.log(err);
         return res.status(500).json({
           errors: [err],
         });
