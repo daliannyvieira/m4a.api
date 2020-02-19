@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const url = require('url')
 const { Op } = require('sequelize');
 const {
   User, Interests, Initiative, Matches,
@@ -58,6 +59,18 @@ const login = async (email) => {
   return await auth(data);
 };
 
+const handleDecode = async (req) => {
+  try {
+    const authorization = req.header('Authorization');
+    const token = authorization.replace('Bearer ', '');
+    const decoded = jwt.verify(token, secret);
+
+    return decoded;
+  } catch (err) {
+    return undefined;
+  }
+};
+
 const loggedUser = async (req) => {
   try {
     const authorization = req.header('Authorization');
@@ -75,14 +88,31 @@ const loggedUser = async (req) => {
 
 const requiresAuth = (allowedRoutes) => (req, res, next) => {
   if (req.originalUrl.includes('docs')) return next();
-  const url = allowedRoutes.find((item) => item.path === req.originalUrl);
-  if (url && url.methods.includes(req.method)) {
+  
+  let queryString = undefined
+
+  console.log('req.', req.originalUrl)
+  
+  if (req.query) {
+    queryString = url.parse(req.url).query
+  }
+
+  const link = allowedRoutes.find((item) => {
+    if (queryString) {
+      return `${item.path}?${queryString}` === req.originalUrl;
+    }
+    return item.path;
+  })
+  
+  if (link && link.methods.includes(req.method)) {
     return next();
   }
   const authorization = req.header('Authorization');
+  
   if (!authorization) {
     return res.status(401).json({ message: 'No authorization header found' });
   }
+  
   try {
     const token = authorization.replace('Bearer ', '');
     jwt.verify(token, secret);
@@ -133,6 +163,10 @@ const routerList = [
   },
   {
     path: '/login/verify',
+    methods: ['GET'],
+  },
+  {
+    path: '/organization/initiatives/report',
     methods: ['GET'],
   },
 ];
@@ -224,5 +258,5 @@ secret, {
 });
 
 module.exports = {
-  login, loginFB, loggedUser, requiresAuth, routerList,
+  login, loginFB, loggedUser, requiresAuth, routerList, handleDecode,
 };

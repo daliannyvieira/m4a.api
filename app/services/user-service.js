@@ -427,17 +427,35 @@ module.exports = class Users {
           ],
         });
         if (user) {
+          const chooseOwner = (match) => {
+            if (match.Organization) {
+              return match.Organization.name;
+            }
+            if (match.User) {
+              return match.name;
+            }
+            if (match.Initiative.Organization) {
+              return match.Initiative.Organization.name;
+            }
+            if (match.Initiative.User) {
+              return match.Initiative.User.username;
+            }
+            if (match.Initiative.Organization) {
+              return match.Initiative.Organization.name;
+            }
+            return null;
+          };
           return res.status(200).json({
             data: {
               initiatives: initiatives && initiatives.map((init) => ({
                 type: 'Initiative',
                 id: init.id,
-                attributes: initFormat.format(init),
+                attributes: initFormat.format(init, chooseOwner(init)),
               })),
               matches: matches && matches.map((match) => ({
                 type: 'Initiative',
                 id: match.Initiative.id,
-                attributes: initFormat.format(match.Initiative),
+                attributes: initFormat.format(match.Initiative, chooseOwner(match)),
               })),
             },
           });

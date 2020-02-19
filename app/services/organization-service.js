@@ -1,13 +1,16 @@
 const { Op } = require('sequelize');
 const {
-  Organization, Initiative, InitiativesImages, Interests, Member, User
+  Organization, Initiative, InitiativesImages, Interests, Member, User, Orm, sequelize,
 } = require('../../domain/entities');
-const { loggedUser } = require('../../domain/auth');
+
+const { loggedUser, handleDecode } = require('../../domain/auth');
 const {
   uploadImage, storageBucket, deleteImage,
 } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
+const { generateReport } = require('../../infra/reports');
 const orgFormat = require('../responses/orgs-long');
+const userFormat = require('../responses/users-long');
 const initFormat = require('../responses/initiatives-long.js');
 
 module.exports = class Initiatives {
@@ -16,19 +19,22 @@ module.exports = class Initiatives {
   }
 
   expose() {
-    this.findOrganization();
     this.createOrganization();
+    this.findOrganization();
+    this.findOrgInitiatives();
+    this.createOrgMember();
+    this.findOrgMembers();
     this.uploadImageOrg();
-    this.uploadImageCommittee();
     this.findCommittees();
     this.createCommitees();
     this.findCommittee();
-    this.findOrgInitiatives();
+    this.createCommitteeMember();
+    this.findCommitteeMembers();
     this.findCommitteeInitiatives();
-    this.createMember();
-    this.findMembers();
+    this.uploadImageCommittee();
+    this.findOrgInitiativesReport();
   }
-
+  
   createCommitees() {
     this.router.post('/organization/:idOrg/committee', async (req, res) => {
       try {
@@ -263,7 +269,7 @@ module.exports = class Initiatives {
       }
     });
   }
-
+  
   uploadImageCommittee() {
     this.router.post('/committee/:committeeId/avatar', multer.single('image'), async (req, res) => {
       try {
@@ -323,9 +329,104 @@ module.exports = class Initiatives {
     });
   }
 
+  findOrgInitiativesReport() {
+    this.router.get('/organization/initiatives/report', async (req, res) => {
+      try {
+        if (req.query.initiatives) {
+          var array = JSON.parse("[" + req.query.initiatives + "]");
+          const initiatives = await Initiative.findAll({
+            where: {
+              id: array
+            },
+            raw: true
+          })
+
+          const headers = Object.keys(initiatives[0])
+          const data = initiatives.map(item => Object.values(item))
+
+          const report = await generateReport([headers, ...data])
+  
+          res.attachment(`initiatives_${Date.now()}.xlsx`)
+          return res.status(200).send(report);
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+            aaaaaaaaaaA: 'aaaa',
+            req: req.query
+          }],
+        });
+      }
+      catch (err) {
+        console.log('err', err);
+        return res.status(500).json({
+          errors: [err],
+        });
+     }
+    });
+  }
+
   findOrgInitiatives() {
     this.router.get('/organization/:orgId/initiatives', async (req, res) => {
       try {
+        if (req.query.include_committees) {
+          const organization = await Organization.findOne({
+            where: {
+              id: req.params.orgId,
+              OrganizationId: null,
+            },
+            include: [
+              {
+                model: Initiative,
+                as: 'OrganizationInitiatives',
+                include: [InitiativesImages, Interests],
+              },
+              {
+                model: Organization,
+                as: 'Committee',
+                include: [
+                  {
+                    model: Initiative,
+                    as: 'OrganizationInitiatives',
+                    include: [InitiativesImages, Interests],
+                  },
+                ]
+              }
+            ],
+          });
+          if (organization) {
+            let initiatives = []
+            organization.OrganizationInitiatives.map((init) => {
+              initiatives.push({
+                type: 'Initiative',
+                id: init.id,
+                attributes: initFormat.format(init, organization.name),
+              })
+            })
+            organization.Committee.map(item => item.OrganizationInitiatives.map((ini) => {
+              initiatives.push({
+                type: 'Initiative',
+                id: ini.id,
+                attributes: initFormat.format(ini, organization.name),
+              })
+            }))
+            return res.status(200).json({
+              data: {
+                type: 'Organization',
+                id: organization.id,
+                attributes: orgFormat.format(organization),
+                relationships: {
+                  initiatives
+                },
+              },
+            });
+          }
+          return res.status(404).json({
+            errors: [{
+              message: 'Didn’t find anything here!',
+            }],
+          });
+        }
         const organization = await Organization.findOne({
           where: {
             id: req.params.orgId,
@@ -349,18 +450,11 @@ module.exports = class Initiatives {
                 initiatives: organization.OrganizationInitiatives.map((init) => ({
                   type: 'Initiative',
                   id: init.id,
-                  attributes: initFormat.format(init),
+                  attributes: initFormat.format(init, organization.name),
                 })),
               },
             },
           });
-          // return res.status(200).json({
-          // data: data.map(((init) => ({
-          //   type: 'Initiative',
-          //   id: init.id,
-          //   attributes: initFormat.format(init),
-          // }))),
-          // });
         }
         return res.status(404).json({
           errors: [{
@@ -424,21 +518,161 @@ module.exports = class Initiatives {
     });
   }
 
-  createMember() {
-    this.router.post('/organization/:orgId/member', async (req, res) => {
+  createOrgMember() {
+    this.router.post('/organization/:orgId/members', async (req, res) => {
+      const t = await sequelize.transaction();
       try {
-        const { email } = req.body;
-        const user = await User.findOne({
-          where: {
-            email,
-          },
-        });
-        if (user) {
+        const user = await handleDecode(req);
+        if (!user) {
+          return res.status(404).json({
+            errors: [{
+              message: 'Didn’t find anything here!',
+            }],
+          });
+        }
+        const { members } = req.body;
+        if (!members) {
+          return res.status(400).json({
+            errors: [{
+              message: 'You must include array members',
+            }],
+          });
+        }
+
+        const hasOwner = members.find((item) => item === user.info.id);
+        if (hasOwner) {
+          return res.status(400).json({
+            errors: [{
+              message: 'You are already a member',
+            }],
+          });
+        }
+        const select = `SELECT UserId FROM Members WHERE OrganizationId = ${req.params.orgId} AND UserId IN (${members.join(',')})`;
+
+        let existingMembers = await sequelize.query(select, { type: Orm.QueryTypes.SELECT });
+        existingMembers = existingMembers.map((item) => item.UserId);
+
+        const filtered = members.filter((item) => !existingMembers.includes(item));
+
+        if (filtered.length > 0) {
+          const mappedMembers = filtered.map((item) => `(${req.params.orgId}, ${item})`);
+          const query = `INSERT INTO Members (OrganizationId, UserId) VALUES ${mappedMembers.join(', ')}`;
+          const [results, metadata] = await sequelize.query(query, { transaction: t });
+          await t.commit();
           return res.status(201).json({
-            data: await Member.create({
-              OrganizationId: req.params.orgId,
-              UserId: user.id,
-            }),
+            message: 'Members added with success.',
+          });
+        }
+        return res.status(400).json({
+          errors: [{
+            message: `This members are already on database: ${existingMembers.join(',')}`,
+          }],
+        });
+      } catch (err) {
+        await t.rollback();
+        console.log(err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  createCommitteeMember() {
+    this.router.post('/organization/:orgId/members', async (req, res) => {
+      const t = await sequelize.transaction();
+      try {
+        const user = await handleDecode(req);
+        if (!user) {
+          return res.status(404).json({
+            errors: [{
+              message: 'Didn’t find anything here!',
+            }],
+          });
+        }
+        const { members } = req.body;
+        if (!members) {
+          return res.status(400).json({
+            errors: [{
+              message: 'You must include array members',
+            }],
+          });
+        }
+
+        const hasOwner = members.find((item) => item === user.info.id);
+        if (hasOwner) {
+          return res.status(400).json({
+            errors: [{
+              message: 'You are already a member',
+            }],
+          });
+        }
+        const select = `SELECT UserId FROM Members WHERE OrganizationId = ${req.params.orgId} AND UserId IN (${members.join(',')})`;
+
+        let existingMembers = await sequelize.query(select, { type: Orm.QueryTypes.SELECT });
+        existingMembers = existingMembers.map((item) => item.UserId);
+
+        const filtered = members.filter((item) => !existingMembers.includes(item));
+
+        if (filtered.length > 0) {
+          const mappedMembers = filtered.map((item) => `(${req.params.orgId}, ${item})`);
+          const query = `INSERT INTO Members (OrganizationId, UserId) VALUES ${mappedMembers.join(', ')}`;
+          const [results, metadata] = await sequelize.query(query, { transaction: t });
+          await t.commit();
+          return res.status(201).json({
+            message: 'Members added with success.',
+          });
+        }
+        return res.status(400).json({
+          errors: [{
+            message: 'This members are already on database: ',
+            existingMembers,
+          }],
+        });
+      } catch (err) {
+        await t.rollback();
+        console.log(err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  findOrgMembers() {
+    this.router.get('/organization/:orgId/members', async (req, res) => {
+      try {
+        const data = await Organization.findOne({
+          where: {
+            id: req.params.orgId,
+            OrganizationId: null,
+          },
+          include: [
+            {
+              model: Member,
+              as: 'OrganizationMembers',
+              include: [User],
+            },
+            User,
+          ],
+        });
+        if (data) {
+          return res.status(200).json({
+            data: {
+              type: 'Organization',
+              id: data.id,
+              attributes: orgFormat.format(data),
+              owner: data.User && ({
+                type: data.User && 'User',
+                id: data.User && data.User.id,
+                attributes: data.User && userFormat.format(data.User),
+              }),
+              members: data.OrganizationMembers && data.OrganizationMembers.map(((user) => ({
+                type: user.User && 'User',
+                id: user.User && user.User.id,
+                attributes: user.User && userFormat.format(user.User),
+              }))),
+            },
           });
         }
         return res.status(404).json({
@@ -455,13 +689,15 @@ module.exports = class Initiatives {
     });
   }
 
-  findMembers() {
-    this.router.get('/organization/:orgId/members', async (req, res) => {
+  findCommitteeMembers() {
+    this.router.get('/committee/:id/members', async (req, res) => {
       try {
         const data = await Organization.findOne({
           where: {
-            id: req.params.orgId,
-            // OrganizationId: null,
+            id: req.params.id,
+            OrganizationId: {
+              [Op.not]: null,
+            },
           },
           include: [
             {
@@ -469,16 +705,26 @@ module.exports = class Initiatives {
               as: 'OrganizationMembers',
               include: [User],
             },
+            User,
           ],
         });
         if (data) {
           return res.status(200).json({
-            data,
-            // data: {
-            //   type: 'Organization',
-            //   id: data.id,
-            //   attributes: orgFormat.format(data),
-            // },
+            data: {
+              type: 'Organization',
+              id: data.id,
+              attributes: orgFormat.format(data),
+              owner: data.User && ({
+                type: data.User && 'User',
+                id: data.User && data.User.id,
+                attributes: data.User && userFormat.format(data.User),
+              }),
+              members: data.OrganizationMembers && data.OrganizationMembers.map(((user) => ({
+                type: user.User && 'User',
+                id: user.User && user.User.id,
+                attributes: user.User && userFormat.format(user.User),
+              }))),
+            },
           });
         }
         return res.status(404).json({

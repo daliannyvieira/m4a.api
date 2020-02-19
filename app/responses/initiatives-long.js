@@ -1,5 +1,5 @@
 const longJson = {
-  format: (initiative) => ({
+  format: (initiative, ownerName) => ({
     id: initiative.id,
     name: initiative.name,
     website: initiative.website,
@@ -16,9 +16,7 @@ const longJson = {
     start: initiative.start,
     finish: initiative.finish,
     ownerType: initiative.ownerType,
-    ownerName: initiative.Organization
-      ? initiative.Organization.name
-      : initiative.User && initiative.User.username,
+    ownerName: ownerName && ownerName,
     userId: initiative.UserId,
     orgId: initiative.OrganizationId,
     createdAt: initiative.createdAt,
