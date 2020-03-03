@@ -401,17 +401,64 @@ module.exports = class Users {
           }],
         });
         if (myOrganizations) {
+          const selectIntMembers = `
+            SELECT * FROM Interests i 
+            INNER JOIN (
+              SELECT ii.InitiativeId, ii.InterestId, b.OrganizationId FROM InitiativesInterests ii 
+              INNER JOIN (
+              SELECT * FROM Initiatives i2 WHERE i2.OrganizationId IN (
+                SELECT o.OrganizationId FROM Members o 
+                WHERE o.UserId = ${req.params.userId}
+              )
+              ) b
+              ON ii.InitiativeId = b.id
+            ) a
+            ON a.InterestId = i.id
+          `;
+
+          const selectIntAdmin = `
+            SELECT * FROM Interests i 
+            INNER JOIN (
+              SELECT ii.InitiativeId, ii.InterestId, b.OrganizationId FROM InitiativesInterests ii 
+              INNER JOIN (
+                SELECT * FROM Initiatives i2 WHERE i2.OrganizationId IN (
+                  SELECT o.id FROM Organizations o 
+                  WHERE o.idAdmin = ${req.params.userId}
+                )
+              ) b
+              ON ii.InitiativeId = b.id
+            ) a
+            ON a.InterestId = i.id
+          `;
+
+          const intMembers = await sequelize.query(selectIntMembers, { type: Orm.QueryTypes.SELECT });
+          const intAdmin = await sequelize.query(selectIntAdmin, { type: Orm.QueryTypes.SELECT });
+
           return res.status(200).json({
             data: {
               myOrganizations: myOrganizations.map(((org) => ({
                 type: 'Organization',
                 id: org.id,
                 attributes: orgFormat.format(org),
+                relationships: {
+                  interests: intAdmin.filter((int) => int.OrganizationId === org.id).map((interest) => ({
+                    id: interest.id,
+                    description: interest.description,
+                    type: interest.type,
+                  })),
+                },
               }))),
               workingFor: workingFor && workingFor.map(((org) => ({
                 type: 'Organization',
                 id: org.Organization.id,
                 attributes: orgFormat.format(org.Organization),
+                relationships: {
+                  interests: intMembers.filter((int) => int.OrganizationId === org.Organization.id).map((interest) => ({
+                    id: interest.id,
+                    description: interest.description,
+                    type: interest.type,
+                  })),
+                },
               }))),
             },
           });
@@ -466,14 +513,13 @@ module.exports = class Users {
             INNER JOIN (
             SELECT * FROM Initiatives i2 WHERE i2.OrganizationId IN (
               SELECT o.OrganizationId FROM Members o 
-              WHERE o.UserId = 749
+              WHERE o.UserId = ${req.params.userId}
             )
             ) b
             ON ii.InitiativeId = b.id
           ) a
           ON a.InterestId = i.id
         `;
-
 
         const interestsList = await sequelize.query(select, { type: Orm.QueryTypes.SELECT });
 
