@@ -50,7 +50,8 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
-    valeLink: DataTypes.STRING,
+    partner: DataTypes.STRING,
+    partnerVinculo: DataTypes.STRING,
   },
   {
     paranoid: true,

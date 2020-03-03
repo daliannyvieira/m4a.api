@@ -156,7 +156,22 @@ module.exports = class Initiatives {
 
             if (result) {
               return res.status(200).json({
-                data: result.map((initiative) => shortJson.format(initiative)),
+                data: result.map((initiative) => ({
+                  type: 'Initiatives',
+                  id: initiative.id,
+                  attributes: shortJson.format(initiative),
+                  relationships: {
+                    interests: initiative.Interests && initiative.Interests.map((interest) => ({
+                      id: interest.id,
+                      description: interest.description,
+                      type: interest.type,
+                    })),
+                    images: initiative.InitiativesImages && initiative.InitiativesImages.map((img) => ({
+                      id: img.id,
+                      image: img.image,
+                    })),
+                  },
+                })),
               });
             }
             return res.status(500).json({
@@ -164,7 +179,22 @@ module.exports = class Initiatives {
             });
           }
           return res.status(200).json({
-            data: initiatives.map((initiative) => shortJson.format(initiative)),
+            data: initiatives.map((initiative) => ({
+              type: 'Initiatives',
+              id: initiative.id,
+              attributes: shortJson.format(initiative),
+              relationships: {
+                interests: initiative.Interests && initiative.Interests.map((interest) => ({
+                  id: interest.id,
+                  description: interest.description,
+                  type: interest.type,
+                })),
+                images: initiative.InitiativesImages && initiative.InitiativesImages.map((img) => ({
+                  id: img.id,
+                  image: img.image,
+                })),
+              },
+            })),
           });
         }
         return res.status(404).json({

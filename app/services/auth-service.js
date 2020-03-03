@@ -1,5 +1,5 @@
 const request = require('request-promise');
-const { login, loginFB, loggedUser } = require('../../domain/auth');
+const { login, loggedUser } = require('../../domain/auth');
 const UserJson = require('../responses/users-long');
 
 module.exports = class Login {
@@ -27,7 +27,7 @@ module.exports = class Login {
           },
         };
         const facebook = await request(options);
-        const token = await loginFB(JSON.parse(facebook));
+        const token = await login(JSON.parse(facebook));
         if (token) {
           return res.status(201).json({
             data: token,
@@ -35,6 +35,7 @@ module.exports = class Login {
         }
         return res.status(404).json({
           errors: [{
+            // email: JSON.parse(facebook),
             message: 'Didn’t find anything here!',
           }],
         });

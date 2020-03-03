@@ -1,14 +1,16 @@
+const { Op } = require('sequelize');
 const {
-  User, Initiative, Matches, Interests, InitiativesImages, Organization,
+  User, Initiative, Matches, Interests, InitiativesImages, Organization, Member, Orm, sequelize,
 } = require('../../domain/entities');
 const { uploadImage, storageBucket } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
 const { login } = require('../../domain/auth');
 const { loggedUser } = require('../../domain/auth');
-const usersShortFormat = require('../responses/users-short');
+const usersShort = require('../responses/users-short');
 const userFormat = require('../responses/users-long');
 const orgFormat = require('../responses/orgs-long');
 const initFormat = require('../responses/initiatives-long.js');
+const initShort = require('../responses/initiatives-short.js');
 
 module.exports = class Users {
   constructor(router) {
@@ -24,9 +26,10 @@ module.exports = class Users {
     this.updateUserInterests();
     this.removeUser();
     this.findUsersList();
-    this.findOrgsByUser();
     this.findUserChat();
     this.findUserByEmail();
+    this.findOrgsByUser();
+    this.findCommitteesByUser();
   }
 
   findUser() {
@@ -353,8 +356,20 @@ module.exports = class Users {
   findUsersList() {
     this.router.get('/users', async (req, res) => {
       try {
-        return res.status(200).json({
-          data: await User.findAll().map((user) => usersShortFormat.format(user)),
+        const users = await User.findAll();
+        if (users) {
+          return res.status(200).json({
+            data: users.map(((user) => ({
+              type: 'Users',
+              id: user.id,
+              attributes: usersShort.format(user),
+            }))),
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
         });
       } catch (err) {
         console.log(err);
@@ -368,18 +383,115 @@ module.exports = class Users {
   findOrgsByUser() {
     this.router.get('/user/:userId/organizations', async (req, res) => {
       try {
-        const data = await Organization.findAll({
+        const myOrganizations = await Organization.findAll({
           where: {
             idAdmin: req.params.userId,
             OrganizationId: null,
           },
         });
-        if (data) {
+        const workingFor = await Member.findAll({
+          where: {
+            UserId: req.params.userId,
+          },
+          include: [{
+            model: Organization,
+            where: {
+              OrganizationId: null,
+            },
+          }],
+        });
+        if (myOrganizations) {
           return res.status(200).json({
-            data: data.map(((org) => ({
-              type: 'Organization',
-              id: org.id,
-              attributes: orgFormat.format(org),
+            data: {
+              myOrganizations: myOrganizations.map(((org) => ({
+                type: 'Organization',
+                id: org.id,
+                attributes: orgFormat.format(org),
+              }))),
+              workingFor: workingFor && workingFor.map(((org) => ({
+                type: 'Organization',
+                id: org.Organization.id,
+                attributes: orgFormat.format(org.Organization),
+              }))),
+            },
+          });
+        }
+        return res.status(404).json({
+          errors: [{
+            message: 'Didn’t find anything here!',
+          }],
+        });
+      } catch (err) {
+        console.log('err', err);
+        return res.status(500).json({
+          errors: [err],
+        });
+      }
+    });
+  }
+
+  findCommitteesByUser() {
+    this.router.get('/user/:userId/committees', async (req, res) => {
+      try {
+        const workingFor = await Member.findAll({
+          where: {
+            UserId: req.params.userId,
+          },
+          include: [{
+            model: Organization,
+            where: {
+              OrganizationId: {
+                [Op.not]: null,
+              },
+            },
+            include: [{
+              model: Member,
+              as: 'OrganizationMembers',
+              attributes: ['UserId'],
+              required: false,
+            },
+            {
+              model: Initiative,
+              as: 'OrganizationInitiatives',
+              attributes: ['id'],
+              required: false,
+            }],
+          }],
+        });
+
+        const select = `
+          SELECT * FROM Interests i 
+          INNER JOIN (
+            SELECT ii.InitiativeId, ii.InterestId, b.OrganizationId FROM InitiativesInterests ii 
+            INNER JOIN (
+            SELECT * FROM Initiatives i2 WHERE i2.OrganizationId IN (
+              SELECT o.OrganizationId FROM Members o 
+              WHERE o.UserId = 749
+            )
+            ) b
+            ON ii.InitiativeId = b.id
+          ) a
+          ON a.InterestId = i.id
+        `;
+
+
+        const interestsList = await sequelize.query(select, { type: Orm.QueryTypes.SELECT });
+
+        if (workingFor && Object.keys(workingFor).length > 0) {
+          return res.status(200).json({
+            data: workingFor && workingFor.map(((org) => ({
+              type: 'Committee',
+              id: org.Organization.id,
+              attributes: orgFormat.format(org.Organization),
+              relationships: {
+                volunteers: org.Organization.OrganizationMembers,
+                initiatives: org.Organization.OrganizationInitiatives,
+                interests: interestsList.filter((int) => int.OrganizationId === org.Organization.id).map((interest) => ({
+                  id: interest.id,
+                  description: interest.description,
+                  type: interest.type,
+                })),
+              },
             }))),
           });
         }
@@ -389,6 +501,7 @@ module.exports = class Users {
           }],
         });
       } catch (err) {
+        console.log('errrr', err);
         return res.status(500).json({
           errors: [err],
         });
