@@ -30,6 +30,7 @@ module.exports = class Users {
               }],
             });
           }
+          
           const match = await Matches.create({
             InitiativeId: req.params.initiativeId,
             UserId: req.params.userId,

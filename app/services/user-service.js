@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const { Op } = require('sequelize');
 const {
   User, Initiative, Matches, Interests, InitiativesImages, Organization, Member, Orm, sequelize,
@@ -388,6 +389,18 @@ module.exports = class Users {
             idAdmin: req.params.userId,
             OrganizationId: null,
           },
+          include: [{
+            model: Organization,
+            as: 'Committee',
+            attributes: ['id'],
+            required: false,
+          },
+          {
+            model: Member,
+            as: 'OrganizationMembers',
+            attributes: ['UserId'],
+            required: false,
+          }],
         });
         const workingFor = await Member.findAll({
           where: {
@@ -398,6 +411,19 @@ module.exports = class Users {
             where: {
               OrganizationId: null,
             },
+            include: [
+              {
+                model: Organization,
+                as: 'Committee',
+                attributes: ['id'],
+                required: false,
+              },
+              {
+                model: Member,
+                as: 'OrganizationMembers',
+                attributes: ['UserId'],
+                required: false,
+              }],
           }],
         });
         if (myOrganizations) {
@@ -434,6 +460,9 @@ module.exports = class Users {
           const intMembers = await sequelize.query(selectIntMembers, { type: Orm.QueryTypes.SELECT });
           const intAdmin = await sequelize.query(selectIntAdmin, { type: Orm.QueryTypes.SELECT });
 
+          const uniqueIntAdmin = intAdmin.filter((v, i, a) => a.findIndex((t) => (t.id === v.id)) === i);
+          const uniqueIntMembers = intMembers.filter((v, i, a) => a.findIndex((t) => (t.id === v.id)) === i);
+
           return res.status(200).json({
             data: {
               myOrganizations: myOrganizations.map(((org) => ({
@@ -441,11 +470,13 @@ module.exports = class Users {
                 id: org.id,
                 attributes: orgFormat.format(org),
                 relationships: {
-                  interests: intAdmin.filter((int) => int.OrganizationId === org.id).map((interest) => ({
+                  interests: uniqueIntAdmin.filter((int) => int.OrganizationId === org.id).map((interest) => ({
                     id: interest.id,
                     description: interest.description,
                     type: interest.type,
                   })),
+                  volunteers: org.OrganizationMembers,
+                  committees: org.Committee,
                 },
               }))),
               workingFor: workingFor && workingFor.map(((org) => ({
@@ -453,11 +484,13 @@ module.exports = class Users {
                 id: org.Organization.id,
                 attributes: orgFormat.format(org.Organization),
                 relationships: {
-                  interests: intMembers.filter((int) => int.OrganizationId === org.Organization.id).map((interest) => ({
+                  interests: uniqueIntMembers.filter((int) => int.OrganizationId === org.Organization.id).map((interest) => ({
                     id: interest.id,
                     description: interest.description,
                     type: interest.type,
                   })),
+                  volunteers: org.Organization.OrganizationMembers,
+                  committees: org.Organization.Committee,
                 },
               }))),
             },
@@ -505,7 +538,6 @@ module.exports = class Users {
             }],
           }],
         });
-
         const select = `
           SELECT * FROM Interests i 
           INNER JOIN (
@@ -521,24 +553,27 @@ module.exports = class Users {
           ON a.InterestId = i.id
         `;
 
-        const interestsList = await sequelize.query(select, { type: Orm.QueryTypes.SELECT });
+        // const interestsList = await sequelize.query(select, { type: Orm.QueryTypes.SELECT });
+
+        // const unique = interestsList.filter((v, i, a) => a.findIndex((t) => (t.id === v.id)) === i);
 
         if (workingFor && Object.keys(workingFor).length > 0) {
           return res.status(200).json({
-            data: workingFor && workingFor.map(((org) => ({
+            data: workingFor.map((org) => ({
               type: 'Committee',
               id: org.Organization.id,
               attributes: orgFormat.format(org.Organization),
               relationships: {
                 volunteers: org.Organization.OrganizationMembers,
                 initiatives: org.Organization.OrganizationInitiatives,
-                interests: interestsList.filter((int) => int.OrganizationId === org.Organization.id).map((interest) => ({
-                  id: interest.id,
-                  description: interest.description,
-                  type: interest.type,
-                })),
+                // unique: unique.filter((int) => int.OrganizationId === org.Organization.id).map((interest) => ({
+                //   id: interest.id,
+                //   description: interest.description,
+                //   type: interest.type,
+                //   org: interest.OrganizationId
+                // })),
               },
-            }))),
+            })),
           });
         }
         return res.status(404).json({

@@ -10,7 +10,13 @@ module.exports = {
     projectId: process.env.FIREBASE_PROJECT_ID,
     jwtSecret: process.env.JWT_SECRET,
     dialect: 'mysql',
-    dialectModule: require('mysql2')
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 40000,
+      idle: 20000,
+    },
+    // dialectModule: require('mysql2'),
   },
   production: {
     username: process.env.RELACIONAL_DB_USERNAME,
@@ -20,6 +26,12 @@ module.exports = {
     projectId: process.env.FIREBASE_PROJECT_ID,
     jwtSecret: process.env.JWT_SECRET,
     dialect: 'mysql',
-    dialectModule: require('mysql2')
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 40000,
+      idle: 20000,
+    },
+    // dialectModule: require('mysql2'),
   },
 };

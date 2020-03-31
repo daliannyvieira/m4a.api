@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
 const {
-  Initiative, Interests, InitiativesImages, Matches, User,
+  Organization, Initiative, Interests, InitiativesImages, Matches, User,
 } = require('../../domain/entities');
 const { uploadImage, deleteImage, storageBucket } = require('../../infra/cloud-storage');
 const { multer } = require('../../infra/helpers');
@@ -351,6 +351,24 @@ module.exports = class Initiatives {
           where: { id: req.params.initiativeId },
         });
         if (initiative) {
+          if (initiative.ownerType === 'committee') {
+            const committee = await Organization.findOne({
+              where: { id: initiative.OrganizationId },
+            });
+            if (committee.idAdmin === user.id || user.id === initiative.UserId) {
+              await Initiative.destroy({
+                where: { id: req.params.initiativeId },
+              });
+              return res.status(200).json({
+                message: 'Initiative has been deleted.',
+              });
+            }
+            return res.status(403).json({
+              errors: [{
+                message: 'This is not your initiative!',
+              }],
+            });
+          }
           if (user.id === initiative.UserId) {
             await Initiative.destroy({
               where: { id: req.params.initiativeId },

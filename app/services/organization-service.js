@@ -362,7 +362,7 @@ module.exports = class Initiatives {
             );
             return res.status(201).json({
               data: {
-                type: 'Organization',
+                type: 'Committee',
                 id: data.id,
                 attributes: orgFormat.format(data),
               },

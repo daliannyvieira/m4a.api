@@ -34,6 +34,7 @@ secret, {
   expiresIn: '7d',
 });
 
+
 const loggedUser = async (req) => {
   try {
     const authorization = req.header('Authorization');
