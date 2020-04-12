@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
 const {
-  Organization, Initiative, InitiativesImages, Interests, Member, User, Orm, sequelize,
+  Organization, Initiative, InitiativesImages, Interests, Matches, Member, User, Orm, sequelize,
 } = require('../../domain/entities');
 
 const { loggedUser, handleDecode } = require('../../domain/auth');
@@ -406,10 +406,9 @@ module.exports = class Initiatives {
             where: {
               id: array,
             },
-            // raw: true,
-            include: ['Organization', 'User', 'Interests'],
+            // include: ['Organization', 'Interests', 'User', 'initMatches'],
+            include: ['Interests', 'initMatches'],
           });
-          // const headers = Object.keys(initiatives[0]);
           const headers = [
             'Nome',
             'Website',
@@ -426,14 +425,17 @@ module.exports = class Initiatives {
             'Expectativa em arrecadação',
             'Interesses',
             'ODS',
+            'Quantidade de voluntários',
+            'Nomes dos voluntários',
             'Data de criação',
-            'Proponente',
+            // 'Proponente',
           ];
 
           const data = [];
           initiatives.map((item) => {
             const interests = item.Interests.filter((int) => int.type !== 'SDGs').map((i) => i.description);
             const ods = item.Interests.filter((int) => int.type === 'SDGs').map((i) => i.description);
+            const likes = item.initMatches.filter((match) => match.Matches.liked === true)
 
             const init = {
               name: item.name,
@@ -451,14 +453,16 @@ module.exports = class Initiatives {
               amountExpectation: item.amountExpectation,
               interesses: interests.join(', '),
               ODS: ods.join(', '),
+              likesQtd: likes.length,
+              likesName: likes.map((user) => user.username),
               createdAt: item.createdAt,
             };
-            if (item.Organization) {
-              init.ownerName = item.Organization.name;
-            }
-            if (item.User && !item.Organization) {
-              init.ownerName = item.User.username;
-            }
+            // if (item.Organization) {
+            //   init.ownerName = item.Organization.name;
+            // }
+            // if (item.User && !item.Organization) {
+            //   init.ownerName = item.User.username;
+            // }
             data.push(init);
           });
 
@@ -468,6 +472,9 @@ module.exports = class Initiatives {
 
           res.attachment(`initiatives_${Date.now()}.xlsx`);
           return res.status(200).send(report);
+          // return res.status(200).json({
+          //   data,
+          // });
         }
         return res.status(404).json({
           errors: [{

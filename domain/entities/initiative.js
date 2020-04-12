@@ -82,7 +82,7 @@ module.exports = (sequelize, DataTypes) => {
     Initiative.belongsTo(models.Organization);
     Initiative.hasMany(models.InitiativesImages, { foreignKey: 'InitiativeId' });
     Initiative.belongsToMany(models.Interests, { through: 'InitiativesInterests' });
-    Initiative.belongsToMany(models.User, { through: 'Matches' });
+    Initiative.belongsToMany(models.User, { through: 'Matches', as: 'initMatches' });
   };
 
   return Initiative;
