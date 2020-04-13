@@ -136,68 +136,54 @@ const routerList = [
 ];
 
 const login = async (socialData) => {
-  let user;
-  if (!socialData.email && !socialData.id) {
-    user = await User.findOne({
-      where: { email: socialData },
-      include: [
-        Interests,
-      ],
-    });
-  }
-
-  if (socialData.email) {
-    user = await User.findOne({
-      where: { email: socialData.email },
-      include: [
-        Interests,
-      ],
-    });
-  }
-
-  if (socialData.id) {
-    user = await User.findOne({
-      where: { facebookId: socialData.id },
-      include: [
-        Interests,
-      ],
-    });
-  }
+  const searchBy = socialData.email ? 'email' : 'facebookId';
+  const user = await User.findOne({
+    where: { [searchBy]: socialData.email },
+    include: [
+      {
+        model: Interests,
+        attributes: ['id', 'description', 'type'],
+        required: false,
+      },
+      {
+        model: Initiative,
+        as: 'UserInitiatives',
+        attributes: ['id'],
+        required: false,
+        where: {
+          muted: {
+            [Op.or]: [false, null],
+          },
+          deletedAt: null,
+        },
+      }
+    ],
+  });
 
   if (!user) {
     return undefined;
   }
 
-  let initiatives;
   let matches;
-  if (user) {
-    initiatives = await Initiative.findAll({
-      where: {
-        UserId: user.id,
-        muted: {
-          [Op.or]: [false, null],
-        },
-        deletedAt: null,
-      },
-    });
-    matches = await Matches.findAll({
-      where: {
-        UserId: user.id,
-        liked: true,
-      },
-      include: [
-        {
-          model: Initiative,
-          where: {
-            muted: {
-              [Op.or]: [false, null],
-            },
-            deletedAt: null,
+  matches = await Matches.findAll({
+    attributes: ['id'],
+    where: {
+      UserId: user.id,
+      liked: true,
+    },
+    include: [
+      {
+        attributes: ['id', 'muted'],
+        model: Initiative,
+        where: {
+          muted: {
+            [Op.or]: [false, null],
           },
+          deletedAt: null,
         },
-      ],
-    });
-  }
+      },
+    ],
+  });
   const data = {
     id: user.id,
     ...UsersLong.format(user),
@@ -208,13 +194,9 @@ const login = async (socialData) => {
       type: item.type,
     })),
     listening_groups: [
-      ...initiatives.map((item) => ({
-        id: item.id,
-        name: item.name,
-      })),
+      ...user.UserInitiatives,
       ...matches.map((item) => ({
-        id: item.Initiative.id,
-        name: item.Initiative.name,
+        id: item.Initiative.id
       })),
     ],
   };

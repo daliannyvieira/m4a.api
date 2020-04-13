@@ -62,7 +62,7 @@ module.exports = class Login {
           },
         };
         const googleData = await request(options);
-        const token = await login(JSON.parse(googleData).email);
+        const token = await login(JSON.parse(googleData));
         if (token) {
           return res.status(201).json({
             data: token,
