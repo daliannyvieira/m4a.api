@@ -137,8 +137,10 @@ const routerList = [
 
 const login = async (socialData) => {
   const searchBy = socialData.email ? 'email' : 'facebookId';
+  const attr = socialData.email ? socialData.email : socialData.id;
+
   const user = await User.findOne({
-    where: { [searchBy]: socialData.email },
+    where: { [searchBy]: attr },
     include: [
       {
         model: Interests,
@@ -156,7 +158,7 @@ const login = async (socialData) => {
           },
           deletedAt: null,
         },
-      }
+      },
     ],
   });
 
@@ -164,8 +166,7 @@ const login = async (socialData) => {
     return undefined;
   }
 
-  let matches;
-  matches = await Matches.findAll({
+  const matches = await Matches.findAll({
     attributes: ['id'],
     where: {
       UserId: user.id,
@@ -196,7 +197,7 @@ const login = async (socialData) => {
     listening_groups: [
       ...user.UserInitiatives,
       ...matches.map((item) => ({
-        id: item.Initiative.id
+        id: item.Initiative.id,
       })),
     ],
   };

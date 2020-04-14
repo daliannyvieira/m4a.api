@@ -226,26 +226,15 @@ module.exports = class Users {
     this.router.post('/user', async (req, res) => {
       try {
         const newUser = await User.create(req.body);
-
-        const token = await login(req.body.email || req.body.facebookId);
+        const token = await login(req.body);
 
         if (req.body.interests) {
           await newUser.setInterests(req.body.interests);
 
-          let user = null;
-          if (req.body.email) {
-            user = await User.findOne({
-              where: { email: req.body.email },
-              include: [Interests],
-            });
-          }
-
-          if (req.body.facebookId) {
-            user = await User.findOne({
-              where: { facebookId: req.body.facebookId },
-              include: [Interests],
-            });
-          }
+          const user = await User.findOne({
+            where: { email: req.body.email },
+            include: [Interests],
+          });
 
           res.setHeader('Authorization', `Bearer ${token}`);
           return res.status(201).json({
@@ -357,7 +346,9 @@ module.exports = class Users {
   findUsersList() {
     this.router.get('/users', async (req, res) => {
       try {
-        const users = await User.findAll();
+        const users = await User.findAll({
+          attributes: ['id', 'username', 'avatar', 'bio', 'country', 'city', 'allowToRemote'],
+        });
         if (users) {
           return res.status(200).json({
             data: users.map(((user) => ({
