@@ -19,7 +19,10 @@ module.exports = class Users {
       try {
         const user = await User.findOne({
           where: { id: req.params.userId },
-          include: [{ model: Initiative, as: 'UserInitiatives' }],
+          include: [{
+            model: Initiative,
+            as: 'UserInitiatives',
+          }],
         });
         if (user && req.params.initiativeId) {
           const isOwner = user.UserInitiatives.find((initiative) => initiative.dataValues.id == req.params.initiativeId);
@@ -30,13 +33,12 @@ module.exports = class Users {
               }],
             });
           }
-          
           const match = await Matches.create({
             InitiativeId: req.params.initiativeId,
             UserId: req.params.userId,
             liked: req.body.liked,
           });
-          const token = await login(user.email);
+          const token = await login(user);
           res.setHeader('Authorization', `Bearer ${token}`);
           return res.status(200).json({
             data: {
@@ -69,7 +71,7 @@ module.exports = class Users {
         });
         if (token && user && user.id === token.id) {
           const find = await user.removeInitiative(req.params.initiativeId);
-          const newToken = await login(user.email);
+          const newToken = await login(user);
           res.setHeader('Authorization', `Bearer ${newToken}`);
           if (find) {
             return res.status(200).json({
@@ -115,7 +117,7 @@ module.exports = class Users {
                 },
               },
             );
-            const token = await login(user.email);
+            const token = await login(user);
             res.setHeader('Authorization', `Bearer ${token}`);
             return res.status(200).json({
               message: 'Match was updated with success.',
@@ -129,7 +131,7 @@ module.exports = class Users {
               },
             },
           );
-          const token = await login(user.email);
+          const token = await login(user);
           res.setHeader('Authorization', `Bearer ${token}`);
           return res.status(200).json({
             message: 'Match was updated with success.',

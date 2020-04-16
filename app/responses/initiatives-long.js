@@ -26,6 +26,7 @@ const longJson = {
     partners: initiative.partners,
     volunteersExpectation: initiative.volunteersExpectation,
     amountExpectation: initiative.amountExpectation,
+    muted: initiative.muted,
     relationships: {
       interests: initiative.Interests && initiative.Interests.map((interest) => ({
         id: interest.id,

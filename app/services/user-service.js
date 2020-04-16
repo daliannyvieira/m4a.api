@@ -197,7 +197,7 @@ module.exports = class Users {
               where: { id: user.id },
             },
           );
-          const token = await login(user.email);
+          const token = await login(user);
           res.setHeader('Authorization', `Bearer ${token}`);
           return res.status(200).json({
             data: {

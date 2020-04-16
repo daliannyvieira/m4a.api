@@ -136,23 +136,32 @@ module.exports = class Initiatives {
       try {
         const user = await loggedUser(req);
         if (user) {
-          const MatchesList = await Matches.findAll({
+          const matches = await Matches.findAll({
+            attributes: ['InitiativeId'],
             where: { UserId: user.id },
+            raw: true,
           });
-          const IdMatches = MatchesList.map((item) => item.InitiativeId);
+          const idMatches = matches.map((item) => item.InitiativeId);
           const initiatives = await Initiative.findAll({
             where: {
               UserId: {
                 [Op.not]: user.id,
               },
               id: {
-                [Op.not]: IdMatches,
+                [Op.not]: idMatches,
               },
             },
-            include: [Interests, InitiativesImages],
+            include: [{
+              attributes: ['id', 'description', 'type'],
+              model: Interests,
+            },
+            {
+              attributes: ['id', 'image'],
+              model: InitiativesImages,
+            }],
           });
           if (req.query.nearest) {
-            const result = await InitiativeRepository.findNearest(user, IdMatches);
+            const result = await InitiativeRepository.findNearest(user, idMatches);
 
             if (result) {
               return res.status(200).json({
@@ -166,10 +175,7 @@ module.exports = class Initiatives {
                       description: interest.description,
                       type: interest.type,
                     })),
-                    images: initiative.InitiativesImages && initiative.InitiativesImages.map((img) => ({
-                      id: img.id,
-                      image: img.image,
-                    })),
+                    images: initiative.InitiativesImages,
                   },
                 })),
               });
@@ -189,10 +195,7 @@ module.exports = class Initiatives {
                   description: interest.description,
                   type: interest.type,
                 })),
-                images: initiative.InitiativesImages && initiative.InitiativesImages.map((img) => ({
-                  id: img.id,
-                  image: img.image,
-                })),
+                images: initiative.InitiativesImages,
               },
             })),
           });
